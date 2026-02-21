@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Add Member{% endblock %}
+
+{% block content %}
+<h2>Add Member</h2>
+
+<form method="POST">
+
+<h3>Personal Details</h3>
+
+<label>Title</label>
+<select name="title">
+    <option value="">Select Title</option>
+    {% for t in titles %}
+        <option value="{{ t.value }}">{{ t.value }}</option>
+    {% endfor %}
+</select>
+
+
+<label>First Name</label>
+<input name="first_name" required>
+
+<label>Last Name</label>
+<input name="last_name" required>
+
+<label>Gender</label>
+<select name="gender">
+    <option value="">-- Select --</option>
+    <option>Male</option>
+    <option>Female</option>
+</select>
+
+<label>Date of Birth</label>
+<input type="date" name="date_of_birth" required>
+
+<label>Marital Status</label>
+<select name="marital_status">
+    <option value="">Select Marital Status</option>
+    {% for ms in marital_statuses %}
+        <option value="{{ ms.value }}">{{ ms.value }}</option>
+    {% endfor %}
+</select>
+
+
+<label>Occupation</label>
+<select name="occupation">
+    <option value="">-- Select Occupation --</option>
+    <option>Employed</option>
+    <option>Self Employed</option>
+    <option>Unemployed</option>
+</select>
+
+<h3>Contact Details</h3>
+<label>Phone</label>
+<input name="phone" required>
+
+<label>Email</label>
+<input name="email">
+
+<label>Street Address</label>
+<input name="street_address">
+
+<label>Section</label>
+<input name="section">
+
+<h3>Church Details</h3>
+<label>Department</label>
+<select name="department" required>
+    <option value="">Select Department</option>
+    {% for dept in departments %}
+        <option value="{{ dept.value }}">{{ dept.value }}</option>
+    {% endfor %}
+</select>
+
+
+<label>Member Status</label>
+<select name="member_status">
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+</select>
+
+<div class="checkbox-row">
+    <input type="checkbox" name="membership_course">
+    <span>Membership Course Completed</span>
+</div>
+
+<div class="checkbox-row">
+    <input type="checkbox" name="baptized">
+    <span>Baptized</span>
+</div>
+
+<h3>Emergency Contact</h3>
+<label>Name</label>
+<input name="emergency_contact_name">
+
+<label>Phone</label>
+<input name="emergency_contact_phone">
+
+<br><br>
+<button type="submit">Save Member</button>
+
+</form>
+{% endblock %}

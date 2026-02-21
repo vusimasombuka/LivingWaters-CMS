@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Check In - No Phone{% endblock %}
+
+{% block content %}
+<h2>Check In Without Phone</h2>
+
+<form method="POST" action="{{ url_for('checkin.check_in') }}">
+    <input type="hidden" name="service_id" value="{{ service_id }}">
+    
+    <label>First Name *</label>
+    <input name="first_name" required>
+
+    <label>Last Name *</label>
+    <input name="last_name" required>
+    
+    <label>Service</label>
+    <select name="service_id" required>
+        {% for s in services %}
+            <option value="{{ s.id }}" {% if s.id == service_id|int %}selected{% endif %}>
+                {{ s.name }} - {{ s.day_of_week }} {{ s.time }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Alternative Contact (optional)</label>
+    <input name="alternative_contact" placeholder="Email, WhatsApp, or relative's phone">
+
+    <button type="submit">Check In</button>
+</form>
+
+<p style="margin-top: 20px;">
+    <a href="{{ url_for('checkin.check_in') }}">← Back to phone check-in</a>
+</p>
+{% endblock %}

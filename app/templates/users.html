@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+
+{% block content %}
+
+<h2>Users</h2>
+
+<a href="{{ url_for('auth.add_user') }}">
+    <button class="btn btn-success">Add User</button>
+</a>
+
+<br><br>
+
+<table class="table">
+
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for user in users %}
+        <tr>
+
+            <!-- USERNAME -->
+            <td>{{ user.username }}</td>
+
+            <!-- ROLE -->
+            <td>{{ user.role }}</td>
+
+            <!-- ACTIONS -->
+            <td class="table-actions">
+
+                <!-- EDIT -->
+                {% if user.username != "superadmin" %}
+                    <a href="{{ url_for('auth.edit_user', user_id=user.id) }}">
+                        <button class="btn btn-primary">Edit</button>
+                    </a>
+                {% else %}
+                    <button class="btn btn-disabled" disabled>Edit</button>
+                {% endif %}
+
+                <!-- DELETE -->
+                {% if user.username != "superadmin" and user.id != current_user.id %}
+                    <form method="POST"
+                          action="{{ url_for('auth.delete_user', user_id=user.id) }}"
+                          onsubmit="return confirm('Are you sure you want to delete this user?');">
+
+                        <button type="submit" class="btn btn-danger">
+                            Delete
+                        </button>
+                    </form>
+                {% else %}
+                    <span style="color:#999;">Delete disabled</span>
+                {% endif %}
+
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Attendance Analytics{% endblock %}
+
+{% block content %}
+<h2>Attendance Analytics</h2>
+
+<!-- SUB MENU BUTTONS -->
+<div style="margin-bottom: 20px;">
+    <a href="{{ url_for('reports.attendance_simple') }}">
+        <button>Overall</button>
+    </a>
+
+    <a href="{{ url_for('reports.attendance_daily') }}">
+        <button>Daily</button>
+    </a>
+
+    <a href="{{ url_for('reports.attendance_by_service') }}">
+        <button>By Service</button>
+    </a>
+</div>
+
+
+<!-- CHART -->
+<div class="chart-wrapper">
+  <canvas id="attendanceChart"></canvas>
+</div>
+
+
+<!-- RAW DATA FROM FLASK (SAFE JSON INJECTION) -->
+<script id="attendance-data" type="application/json">
+    {{ attendance_data | tojson }}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const rawData = JSON.parse(
+        document.getElementById("attendance-data").textContent
+    );
+
+    const labels = rawData.map(row => row.label);
+    const totals = rawData.map(row => row.total);
+
+    const ctx = document.getElementById("attendanceChart").getContext("2d");
+    let chart;
+
+    function renderChart() {
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Attendance",
+                    data: totals,
+                    backgroundColor: "#4CAF50"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+
+        });
+    }
+
+    function showOverall() {
+        renderChart();
+    }
+
+    // Initial render
+    renderChart();
+</script>
+{% endblock %}

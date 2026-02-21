@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Giving Analytics{% endblock %}
+
+{% block content %}
+
+<h2>Giving Analytics</h2>
+
+<!-- MONTH SELECTOR -->
+<form method="GET">
+    <label>Select Month:</label>
+    <select name="month" onchange="this.form.submit()">
+        {% for m in months %}
+            <option value="{{ m.value }}"
+                {% if m.value == selected_month %}selected{% endif %}>
+                {{ m.name }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+
+<!-- ===================== -->
+<!-- MONTHLY BY TYPE CHART -->
+<!-- ===================== -->
+
+<h3>Monthly Giving by Type</h3>
+<p class="text-muted">
+Shows total giving for the selected month, grouped by offering type.
+</p>
+
+<div class="chart-wrapper">
+    <canvas id="byTypeChart"></canvas>
+</div>
+
+<!-- ===================== -->
+<!-- YEARLY SUMMARY CHART -->
+<!-- ===================== -->
+
+<h3>Yearly Giving Summary</h3>
+<p class="text-muted">
+Shows total giving per month for the selected year.
+</p>
+
+<div class="chart-wrapper" style="margin-top: 40px;">
+    <canvas id="yearChart"></canvas>
+</div>
+
+<!-- ===================== -->
+<!-- SIZE CONTROL -->
+<!-- ===================== -->
+
+<style>
+.chart-wrapper {
+    width: 65%;          /* Reduced ~35% */
+    max-width: 800px;
+    margin: 0 auto;
+}
+</style>
+
+<!-- ===================== -->
+<!-- DATA (SAFE JINJA → JS) -->
+<!-- ===================== -->
+
+<script id="monthly-by-type-data" type="application/json">
+{{ monthly_by_type | tojson }}
+</script>
+
+<script id="yearly-totals-data" type="application/json">
+{{ yearly_totals | tojson }}
+</script>
+
+<!-- ===================== -->
+<!-- CHART.JS -->
+<!-- ===================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+/* -------------------------
+   Parse backend data SAFELY
+------------------------- */
+const monthlyByType = JSON.parse(
+    document.getElementById("monthly-by-type-data").textContent
+);
+
+const yearlyTotals = JSON.parse(
+    document.getElementById("yearly-totals-data").textContent
+);
+
+/* -------------------------
+   Monthly By Type (BAR)
+------------------------- */
+new Chart(document.getElementById("byTypeChart"), {
+    type: "bar",
+    data: {
+        labels: monthlyByType.map(r => r.label),
+        datasets: [{
+            label: "Amount (R)",
+            data: monthlyByType.map(r => r.total),
+            backgroundColor: "#4CAF50"
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true }
+        }
+    }
+});
+
+/* -------------------------
+   Yearly Summary (LINE)
+------------------------- */
+new Chart(document.getElementById("yearChart"), {
+    type: "line",
+    data: {
+        labels: yearlyTotals.map(r => r.month),
+        datasets: [{
+            label: "Total Giving (R)",
+            data: yearlyTotals.map(r => r.total),
+            borderColor: "#2196F3",
+            backgroundColor: "rgba(33,150,243,0.15)",
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true }
+        }
+    }
+});
+</script>
+
+{% endblock %}

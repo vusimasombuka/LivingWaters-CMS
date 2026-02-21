@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<h2>Edit User</h2>
+
+<form method="POST">
+
+    <label>Username</label>
+    <input type="text" value="{{ user.username }}" disabled>
+
+    <label>Role</label>
+    <select name="role" required>
+        <option value="usher" {% if user.role == "usher" %}selected{% endif %}>Usher</option>
+        <option value="finance" {% if user.role == "finance" %}selected{% endif %}>Finance</option>
+        <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
+    </select>
+
+    <label>New Password (leave blank to keep current)</label>
+    <input type="password" name="password">
+
+    <button type="submit">Save Changes</button>
+
+</form>
+
+{% endblock %}

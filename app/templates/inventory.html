@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+<div style="max-width:1100px; margin:0 auto;">
+
+    <h2 style="margin-bottom:20px;">Church Inventory</h2>
+
+    <!-- ================= ADD ITEM FORM ================= -->
+    <div style="background:white; padding:20px; border-radius:12px; margin-bottom:30px;">
+        <h3>Add Inventory Item</h3>
+
+        <form method="POST" action="{{ url_for('inventory.add_inventory') }}">
+
+            <input type="text"
+                   name="name"
+                   placeholder="Item Name"
+                   required
+                   class="form-control"
+                   style="margin-bottom:10px;">
+
+            <input type="number"
+                   name="quantity"
+                   placeholder="Quantity"
+                   required
+                   class="form-control"
+                   style="margin-bottom:10px;">
+
+            <textarea name="notes"
+                      placeholder="Notes (optional)"
+                      class="form-control"
+                      style="margin-bottom:10px;"></textarea>
+
+            <select name="department_id"
+                    required
+                    class="form-control"
+                    style="margin-bottom:10px;">
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.value }}</option>
+                {% endfor %}
+            </select>
+
+            <button class="btn btn-primary">Add Item</button>
+        </form>
+    </div>
+
+    <!-- ================= INVENTORY TABLE ================= -->
+    <div style="background:white; padding:20px; border-radius:12px;">
+        <h3>Inventory List</h3>
+
+        <table style="width:100%; border-collapse:collapse;">
+            <thead style="background:#f3f4f6;">
+                <tr>
+                    <th style="padding:8px; text-align:left;">Item</th>
+                    <th style="padding:8px; text-align:left;">Quantity</th>
+                    <th style="padding:8px; text-align:left;">Department</th>
+                    <th style="padding:8px; text-align:left;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr style="border-top:1px solid #eee;">
+                    <td style="padding:8px;">{{ item.name }}</td>
+                    <td style="padding:8px;">{{ item.quantity }}</td>
+                    <td style="padding:8px;">
+                        {{ item.department.value if item.department else "" }}
+                    </td>
+                    <td style="padding:8px;">{{ item.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

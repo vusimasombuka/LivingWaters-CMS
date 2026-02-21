@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Giving{% endblock %}
+
+{% block content %}
+<h2>Offering</h2>
+
+<a href="{{ url_for('giving.add_giving') }}">
+    <button class="btn btn-primary">+ Add Offering</button>
+</a>
+
+<br><br>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Member</th>
+            <th>Phone</th>
+            <th>Method</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+
+    <tbody>
+{% for g in records.items %}
+  <tr>
+    <td>{{ g.giving_type }}</td>
+    <td>R {{ "%.2f"|format(g.amount) }}</td>
+
+    <td>
+      {% if g.member %}
+        {{ g.member.first_name }} {{ g.member.last_name }}
+      {% elif g.visitor %}
+        {{ g.visitor.first_name }} {{ g.visitor.last_name }}
+      {% else %}
+        —
+      {% endif %}
+    </td>
+
+    <td>{{ g.phone }}</td>
+
+    <td>
+      {% if g.member %}
+        Member
+      {% elif g.visitor %}
+        Visitor
+      {% else %}
+        Unknown
+      {% endif %}
+    </td>
+
+    <td>{{ g.created_at.strftime("%Y-%m-%d") }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
+
+</table>
+<div style="margin-top:20px; text-align:center;">
+
+    {% if records.has_prev %}
+        <a href="{{ url_for('giving.list_giving', page=records.prev_num) }}">
+            ← Previous
+        </a>
+    {% endif %}
+
+    <span style="margin: 0 15px;">
+        Page {{ records.page }} of {{ records.pages }}
+    </span>
+
+    {% if records.has_next %}
+        <a href="{{ url_for('giving.list_giving', page=records.next_num) }}">
+            Next →
+        </a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

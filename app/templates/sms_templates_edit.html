@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Edit SMS Template{% endblock %}
+
+{% block content %}
+
+<h2>Edit SMS Template</h2>
+
+<form method="POST">
+    
+    <label>Message Type</label>
+    <input type="text" value="{{ template.message_type }}" disabled>
+
+    <label>Message</label>
+    <input type="text" name="message" value="{{ template.message }}" required>
+
+    <div class="alert alert-secondary mt-2">
+        <strong>Personalization Tip:</strong>
+        Use <code>{name}</code> to automatically insert the person's first name.
+    </div>
+
+    <br>
+    <button type="submit" class="btn btn-success">Update Template</button>
+    <a href="{{ url_for('sms_templates.list_templates') }}" class="btn btn-secondary">
+        Cancel
+    </a>
+
+</form>
+
+{% endblock %}

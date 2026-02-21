@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- WRAPPER FOR PDF EXPORT -->
+<div id="dashboardContent">
+
+<h2>Giving Dashboard</h2>
+<a href="{{ url_for('giving.add_giving') }}" class="btn btn-success" style="margin-bottom:20px;">
+    + Add Giving
+</a>
+
+<!-- EXPORT PDF BUTTON -->
+<div style="margin-bottom:20px;">
+    <button onclick="exportPDF()" class="btn btn-danger">
+        Export Full Dashboard (PDF)
+    </button>
+</div>
+
+<!-- ================= SUMMARY CARDS ================= -->
+<div style="display:flex; gap:30px; flex-wrap:wrap; margin-top:20px;">
+
+    <div class="card">
+        <h4>Total Giving (All Time)</h4>
+        <h2>R {{ "{:,.2f}".format(total_amount) }}</h2>
+    </div>
+
+    <div class="card">
+        <h4>This Month</h4>
+        <h2>R {{ "{:,.2f}".format(month_total) }}</h2>
+    </div>
+
+</div>
+
+<!-- ================= MONTHLY TREND ================= -->
+<h3 style="margin-top:50px;">Monthly Trend</h3>
+<div style="height:300px; max-width:800px; margin:auto;">
+    <canvas id="monthlyChart"></canvas>
+</div>
+
+<h3 style="margin-top:50px;">Member vs Visitor Giving</h3>
+<div style="height:300px; max-width:800px; margin:auto;">
+    <canvas id="splitChart"></canvas>
+</div>
+
+<h3 style="margin-top:50px;">Giving By Type</h3>
+<div style="height:300px; max-width:800px; margin:auto;">
+    <canvas id="categoryChart"></canvas>
+</div>
+
+<h3 style="margin-top:50px;">Giving Distribution</h3>
+<div style="height:300px; max-width:800px; margin:auto;">
+    <canvas id="typeChart"></canvas>
+</div>
+
+<!-- ================= RECENT GIVING ================= -->
+
+<h3 style="margin-top:50px;">Recent Giving</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="text-align:left;">Date</th>
+            <th style="text-align:left;">Name</th>
+            <th style="text-align:right;">Amount</th>
+            <th style="text-align:left;">Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in recent_giving %}
+        <tr>
+            <td>{{ g.created_at.strftime("%Y-%m-%d") }}</td>
+
+            <td>
+                {% if g.member %}
+                    {{ g.member.first_name }} {{ g.member.last_name }}
+                {% elif g.visitor %}
+                    {{ g.visitor.first_name }} {{ g.visitor.last_name }}
+                {% else %}
+                    Unknown
+                {% endif %}
+            </td>
+
+            <td style="text-align:right;">
+                R {{ "%.2f"|format(g.amount) }}
+            </td>
+
+            <td>{{ g.giving_type }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+</div> <!-- END dashboardContent -->
+
+
+<!-- ================= CHART JS ================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script id="monthlyData" type="application/json">
+    {{ monthly_totals | tojson }}
+</script>
+
+<script id="categoryData" type="application/json">
+    {{ category_totals | tojson }}
+</script>
+
+<script id="typeData" type="application/json">
+    {{ type_totals | tojson }}
+</script>
+
+<script id="memberPercentageData" type="application/json">
+    {{ member_percentage }}
+</script>
+
+<script id="visitorPercentageData" type="application/json">
+    {{ visitor_percentage }}
+</script>
+
+<script>
+    const monthlyData = JSON.parse(document.getElementById("monthlyData").textContent);
+    const categoryData = JSON.parse(document.getElementById("categoryData").textContent);
+    const typeData = JSON.parse(document.getElementById("typeData").textContent);
+    const memberPercentage = parseFloat(document.getElementById("memberPercentageData").textContent);
+    const visitorPercentage = parseFloat(document.getElementById("visitorPercentageData").textContent);
+
+    const monthlyLabels = monthlyData.map(d => d.month);
+    const monthlyValues = monthlyData.map(d => d.total);
+
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "line",
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: "Monthly Giving",
+                data: monthlyValues,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        }
+    });
+
+    new Chart(document.getElementById("splitChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Members", "Visitors"],
+            datasets: [{
+                data: [memberPercentage, visitorPercentage]
+            }]
+        }
+    });
+
+    const categoryLabels = categoryData.map(d => d.category);
+    const categoryValues = categoryData.map(d => d.total);
+
+    new Chart(document.getElementById("categoryChart"), {
+        type: "bar",
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: "Amount by Type",
+                data: categoryValues
+            }]
+        }
+    });
+
+    const typeLabels = typeData.map(d => d.type);
+    const typeValues = typeData.map(d => d.total);
+
+    new Chart(document.getElementById("typeChart"), {
+        type: "pie",
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                data: typeValues
+            }]
+        }
+    });
+</script>
+
+
+<!-- ================= PDF EXPORT LIBRARIES ================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const element = document.getElementById("dashboardContent");
+
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 190;
+    const pageHeight = 295;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 10;
+
+    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+    }
+
+    pdf.save("giving_dashboard.pdf");
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="year-calendar">
+
+    <!-- MAIN MONTH -->
+    <div class="main-month">
+        <h2 id="mainTitle"></h2>
+
+        <div class="weekdays">
+            <div>Mon</div><div>Tue</div><div>Wed</div>
+            <div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+
+        <div class="days" id="mainDays"></div>
+    </div>
+
+    <!-- MINI MONTHS -->
+    <div class="mini-months" id="miniMonths"></div>
+
+</div>
+
+<!-- EVENT MODAL -->
+<div id="eventModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000;">
+    <div style="background:white; max-width:550px; margin:8% auto; padding:20px; border-radius:8px;">
+        <h3 id="modalDate"></h3>
+        <div id="modalEvents"></div>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+let selected = new Date();
+let events = {};
+
+/* LOAD EVENTS FROM DATABASE */
+fetch("/events/api")
+    .then(res => res.json())
+    .then(data => {
+        events = data;
+        drawMainMonth(selected);
+        drawMiniMonths();
+    });
+
+function drawMainMonth(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    document.getElementById("mainTitle").innerText =
+        date.toLocaleString("default", { month: "long", year: "numeric" });
+
+    const daysBox = document.getElementById("mainDays");
+    daysBox.innerHTML = "";
+
+    const firstDay = new Date(year, month, 1).getDay() || 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 1; i < firstDay; i++) {
+        daysBox.appendChild(document.createElement("div"));
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const div = document.createElement("div");
+        div.className = "day";
+
+        const key = `${year}-${String(month + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        div.innerHTML = `<strong>${d}</strong>`;
+
+        if (events[key]) {
+            div.classList.add("event");
+
+            events[key].slice(0, 2).forEach(e => {
+                div.innerHTML += `<div style="font-size:11px;">• ${e.title}</div>`;
+            });
+
+            if (events[key].length > 2) {
+                div.innerHTML += `<div style="font-size:10px;">+${events[key].length - 2} more</div>`;
+            }
+
+            div.onclick = () => openModal(key);
+        }
+
+        daysBox.appendChild(div);
+    }
+}
+
+function drawMiniMonths() {
+    const box = document.getElementById("miniMonths");
+    box.innerHTML = "";
+
+    for (let m = 0; m < 12; m++) {
+        const date = new Date(selected.getFullYear(), m, 1);
+        const mini = document.createElement("div");
+        mini.className = "mini";
+
+        mini.innerHTML = `<h4>${date.toLocaleString("default", { month: "short" })}</h4>`;
+
+        const grid = document.createElement("div");
+        grid.className = "mini-days";
+
+        const first = new Date(date.getFullYear(), m, 1).getDay() || 7;
+        const total = new Date(date.getFullYear(), m + 1, 0).getDate();
+
+        for (let i = 1; i < first; i++) grid.appendChild(document.createElement("div"));
+        for (let d = 1; d <= total; d++) {
+            const c = document.createElement("div");
+            c.innerText = d;
+            grid.appendChild(c);
+        }
+
+        mini.onclick = () => {
+            selected = date;
+            drawMainMonth(selected);
+        };
+
+        mini.appendChild(grid);
+        box.appendChild(mini);
+    }
+}
+
+/* MODAL + EDIT / DELETE */
+
+function openModal(dateKey) {
+    document.getElementById("modalDate").innerText = dateKey;
+    const box = document.getElementById("modalEvents");
+    box.innerHTML = "";
+
+    events[dateKey].forEach(ev => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "12px";
+
+        div.innerHTML = `
+            <input id="title-${ev.id}" value="${ev.title}" style="width:100%; margin-bottom:5px;">
+            <button onclick="saveEvent(${ev.id}, '${dateKey}')">Save</button>
+            <button onclick="removeEvent(${ev.id})" style="background:#e74c3c;">Delete</button>
+            <hr>
+        `;
+
+        box.appendChild(div);
+    });
+
+    document.getElementById("eventModal").style.display = "block";
+}
+
+function closeModal() {
+    document.getElementById("eventModal").style.display = "none";
+}
+
+function saveEvent(id, dateKey) {
+    fetch(`/events/edit/${id}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: `title=${encodeURIComponent(document.getElementById("title-${id}").value)}&event_date=${dateKey}`
+    }).then(() => reloadCalendar());
+}
+
+function removeEvent(id) {
+    if (!confirm("Delete this event?")) return;
+
+    fetch(`/events/delete/${id}`, { method: "POST" })
+        .then(() => reloadCalendar());
+}
+
+function reloadCalendar() {
+    fetch("/events/api")
+        .then(res => res.json())
+        .then(data => {
+            events = data;
+            drawMainMonth(selected);
+            closeModal();
+        });
+}
+</script>
+
+{% endblock %}

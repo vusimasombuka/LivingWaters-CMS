@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Members{% endblock %}
+
+{% block content %}
+<h2>Members</h2>
+
+<a href="{{ url_for('members.add_member') }}">
+    <button class="btn btn-success">+ Add Member</button>
+</a>
+
+<br><br>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    {% for m in members.items %}
+    <tr>
+        <td>{{ m.first_name }}</td>
+        <td>{{ m.last_name }}</td>
+        <td>
+    {% if m.phone %}
+        {{ m.phone }}
+    {% else %}
+        <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
+    {% endif %}
+</td>
+        <td>{{ m.email or "-" }}</td>
+
+        <td class="table-actions">
+            <a href="{{ url_for('members.edit_member', id=m.id) }}">
+                <button class="btn btn-success">Edit</button>
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+</table>
+<div style="margin-top:20px; text-align:center;">
+
+    {% if members.has_prev %}
+        <a href="{{ url_for('members.list_members', page=members.prev_num) }}">
+            ← Previous
+        </a>
+    {% endif %}
+
+    <span style="margin: 0 15px;">
+        Page {{ members.page }} of {{ members.pages }}
+    </span>
+
+    {% if members.has_next %}
+        <a href="{{ url_for('members.list_members', page=members.next_num) }}">
+            Next →
+        </a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Church CMS{% endblock %}</title>
+    <style>
+        .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    font-weight: 600;
+}
+        * {
+    box-sizing: border-box;
+}
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f6fa;
+            height: 100vh;
+            overflow: hidden; /* prevent full page scroll */
+        }
+
+        /* HEADER (FIXED) */
+        header {
+            position: fixed;
+            top: 0;
+            left: 240px;
+            right: 0;
+            height: 140px;
+            background: #ffffff;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            z-index: 1000;
+        }
+        header img {
+            height: 135px; /* +50% from previous 90px */
+            margin-right: 30px;
+        }
+        header h2 {
+            margin: 0;
+            font-size: 26px;
+            color: #2c3e50;
+        }
+
+        /* SIDEBAR (FIXED) */
+        .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    background: #2c3e50;
+    padding: 140px 20px 25px 20px;
+    overflow-y: auto;
+
+}
+       .sidebar a {
+    display: block;
+    width: 100%;              /* ✅ force full width */
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: #34495e;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+}
+        .sidebar a:hover {
+            background: #1abc9c;
+        }
+
+        /* CONTENT (SCROLLS ONLY HERE) */
+        .content {
+            position: fixed;
+            top: 140px;
+            left: 240px;
+            right: 0;
+            bottom: 50px;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f5f6fa;
+        }
+
+        /* FORMS */
+        label {
+            margin-top: 15px;
+            display: block;
+            font-weight: 600;
+        }
+        input:not([type="checkbox"]), select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+        button {
+            margin-top: 25px;
+            padding: 12px 22px;
+            background: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #16a085;
+        }
+
+        /* FOOTER (FIXED) */
+        footer {
+            position: fixed;
+            left: 240px;
+            right: 0;
+            bottom: 0;
+            height: 50px;
+            background: #ffffff;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            line-height: 50px;
+            font-size: 0.9em;
+            color: #777;
+        }
+
+        /* ===== DASHBOARD CALENDAR ===== */
+
+.calendar-layout {
+    display: flex;
+    gap: 25px;
+}
+
+.main-calendar {
+    flex: 3;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calendar-header button {
+    background: #1abc9c;
+    border: none;
+    color: white;
+    font-size: 18px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.calendar-header h2 {
+    margin: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-top: 20px;
+    gap: 8px;
+}
+
+.day {
+    background: #ecf0f1;
+    padding: 10px;
+    border-radius: 6px;
+    min-height: 80px;
+    font-size: 14px;
+}
+
+.day.event {
+    background: #1abc9c;
+    color: white;
+    font-weight: bold;
+}
+
+.mini-calendars {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.mini-month {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+}
+
+.mini-month:hover {
+    background: #1abc9c;
+    color: white;
+}
+
+/* ===== YEAR CALENDAR DASHBOARD ===== */
+
+.year-calendar {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 30px;
+}
+
+/* MAIN MONTH */
+.main-month {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.main-month h2 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.weekdays, .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+}
+
+.weekdays div {
+    font-weight: bold;
+    padding-bottom: 8px;
+}
+
+.day {
+    padding: 10px;
+    min-height: 70px;
+    border-radius: 6px;
+    background: #ecf0f1;
+    margin: 3px;
+}
+
+.day.event {
+    background: #1abc9c;
+    color: white;
+    font-weight: bold;
+}
+
+/* MINI MONTHS */
+.mini-months {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.mini {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.mini h4 {
+    text-align: center;
+    margin: 5px 0;
+}
+
+.mini-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 2px;
+}
+
+.mini-days div {
+    font-size: 10px;
+}
+/* ===== ROLE-BASED DISABLED LINKS ===== */
+.disabled-link {
+    background: #2f3e4e !important;
+    color: #888 !important;
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.flash {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.flash-success {
+    background: #2ecc71;
+}
+
+.flash-error {
+    background: #e74c3c;
+}
+
+.flash-info {
+    background: #3498db;
+}
+.flash-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+    </style>
+</head>
+
+<style>
+/* =======================
+   GLOBAL TABLE STYLES
+======================= */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #f4f6f8;
+}
+
+.table th {
+    text-align: left;
+    padding: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* =======================
+   ACTIONS COLUMN
+======================= */
+
+.table-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* =======================
+   BUTTON SYSTEM
+======================= */
+
+.btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+}
+
+.btn-primary { background: #3498db; }   /* Edit */
+.btn-danger  { background: #e74c3c; }   /* Delete */
+.btn-success { background: #2ecc71; }   /* Add */
+
+.btn-disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+}
+
+/* =======================
+   FLASH MESSAGES
+======================= */
+
+.flash {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.flash-success { background: #2ecc71; }
+.flash-error   { background: #e74c3c; }
+.flash-info    { background: #3498db; }
+
+/* =======================
+   TOGGLE SWITCH (SMS)
+======================= */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background-color: #2ecc71; /* green */
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+
+.chart-wrapper {
+    width: 65%;      /* 100% - 35% = 65% */
+    max-width: 900px;
+    margin: 20px auto;
+  }
+  
+
+
+  /* ==============================
+   MASTER DATA - COMPACT STYLE
+================================ */
+
+/* TABS */
+.tab-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 8px 14px;
+    border: none;
+    background: #34495e;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.tab-btn:hover {
+    background: #2c3e50;
+}
+
+.active-tab {
+    background: #2ecc71;
+}
+
+/* TABLE COMPACT */
+.compact-table th,
+.compact-table td {
+    padding: 8px 10px;
+}
+
+.compact-input {
+    padding: 6px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.add-form {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 220px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+
+</style>
+
+
+<body>
+
+<div class="sidebar" style="overflow-y: auto; height: 100vh;">
+
+    <!-- DASHBOARD -->
+    {% if current_user.role in ["admin", "super_admin", "finance"] %}
+        <a href="/dashboard">Dashboard</a>
+    {% else %}
+        <a class="disabled-link">Dashboard</a>
+    {% endif %}
+
+    <!-- USERS -->
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="{{ url_for('auth.users_list') }}">Users</a>
+    {% else %}
+        <a class="disabled-link">Users</a>
+    {% endif %}
+
+    <!-- EVENTS -->
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="{{ url_for('events.events_admin') }}">Events</a>
+    {% else %}
+        <a class="disabled-link">Events</a>
+    {% endif %}
+
+    <!-- MEMBERS -->
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="/members/">Members</a>
+    {% else %}
+        <a class="disabled-link">Members</a>
+    {% endif %}
+
+    <!-- VISITORS -->
+    {% if current_user.role in ["usher", "admin", "super_admin"] %}
+        <a href="/visitors/">Visitors</a>
+    {% else %}
+        <a class="disabled-link">Visitors</a>
+    {% endif %}
+
+    <!-- INDIVIDUAL OVERVIEW -->
+    {% if current_user.role in ["admin", "super_admin", "finance"] %}
+        <a href="{{ url_for('overview.search') }}">Individual Overview</a>
+    {% else %}
+        <a class="disabled-link">Individual Overview</a>
+    {% endif %}
+
+
+    <!-- DOCUMENTS -->
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="/documents">Documents</a>
+    {% else %}
+        <a class="disabled-link">Documents</a>
+    {% endif %}
+
+    {% if current_user.role in ["super_admin", "admin", "finance"] %}
+    <a href="{{ url_for('inventory.inventory_home') }}">Inventory</a>
+    {% else %}
+        <a class="disabled-link">Inventory</a>
+    {% endif %}
+
+    {% if current_user.role in ["super_admin", "admin"] %}
+    <a href="{{ url_for('inventory.manage_lookup') }}">Master Data</a>
+    {% else %}
+        <a class="disabled-link">Master Data</Data></a>
+    {% endif %}
+
+    {% if current_user.role in ["super_admin", "admin"] %}
+    <a href="{{ url_for('sms_templates.list_templates') }}">SMS Templates</a>
+    {% else %}
+    <a class="disabled-link">SMS Templates</a>
+    {% endif %}
+
+    
+    <!-- REPORTS -->
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="{{ url_for('reports.reports_home') }}">Reports</a>
+    {% else %}
+        <a class="disabled-link">Reports</a>
+    {% endif %}
+
+    {% if current_user.role in ["admin", "super_admin",] %}
+        <a href="{{ url_for('reports.attendance_analytics') }}">Attendance Analytics</a>
+        {% else %}
+        <a class="disabled-link">Attendance Analytics</a>
+    {% endif %}
+
+    {% if current_user.role in ["finance", "admin", "super_admin"] %}
+    <a href="{{ url_for('giving.giving_dashboard') }}">Offering</a>
+    {% else %}
+        <a class="disabled-link">Giving</a>
+    {% endif %}
+
+    {% if current_user.role in ["finance", "admin", "super_admin"] %}
+        <a href="{{ url_for('reports.giving_analytics') }}">Offering Analytics</a>
+    {% else %}
+        <a class="disabled-link">Offering Analytics</a>
+    {% endif %}
+
+    {% if current_user.role in ["finance", "admin", "super_admin"] %}
+    <a href="{{ url_for('sms_logs.list_sms_logs') }}">SMS Logs</a>
+    {% else %}
+        <a class="disabled-link">SMS Logs</a>
+    {% endif %}
+
+    {% if current_user.role in ["admin", "super_admin"] %}
+    <a href="{{ url_for('services.list_services') }}">Services</a>
+    {% else %}
+        <a class="disabled-link">Services</a>
+    {% endif %}
+
+    {% if current_user.role in ["admin", "super_admin"] %}
+    <a href="{{ url_for('reports.retention_monitor') }}">Retention Monitor</a>
+    {% else %}
+        <a class="disabled-link">Retention Monitor</a>
+    {% endif %}
+
+    <!-- LOGOUT -->
+    <a href="/logout">Logout</a>
+
+</div>
+
+
+
+<header>
+    <img src="{{ url_for('static', filename='images/logo.png') }}">
+    <h2>Living Waters Bible Church – CMS</h2>
+</header>
+
+<div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="margin-bottom:15px;">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          {{ message | safe }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
+    {% block content %}{% endblock %}
+
+</div>
+
+<footer>
+    © 2026 Living Waters Bible Church
+</footer>
+
+</body>
+</html>

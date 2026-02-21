@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Visitors{% endblock %}
+
+{% block content %}
+<h2>Visitors</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Phone</th>
+            <th>Last Visit</th>
+            <th>Service</th>
+            <th>Visits</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for visitor in visitors.items %}
+        <tr>
+            <td>{{ visitor.first_name }}</td>
+<td>{{ visitor.last_name }}</td>
+<td>
+    {% if visitor.phone %}
+        {{ visitor.phone }}
+    {% else %}
+        <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
+    {% endif %}
+</td>
+
+<td>
+    {% if visitor.last_visit %}
+        {{ visitor.last_visit.strftime("%Y-%m-%d") }}
+    {% else %}
+        —
+    {% endif %}
+</td>
+
+<td>{{ visitor.last_service or "—" }}</td>
+
+<td>{{ visitor.visit_count }}</td>
+
+<td>
+    {% if current_user.role in ["admin", "super_admin"] %}
+        <a href="{{ url_for('visitors.convert_to_member', visitor_id=visitor.id) }}"
+           class="btn btn-primary btn-sm">Convert</a>
+    {% else %}
+        —
+    {% endif %}
+</td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div style="margin-top:20px; text-align:center;">
+
+    {% if visitors.has_prev %}
+        <a href="{{ url_for('visitors.visitors_list', page=visitors.prev_num) }}">
+            ← Previous
+        </a>
+    {% endif %}
+
+    <span style="margin: 0 15px;">
+        Page {{ visitors.page }} of {{ visitors.pages }}
+    </span>
+
+    {% if visitors.has_next %}
+        <a href="{{ url_for('visitors.visitors_list', page=visitors.next_num) }}">
+            Next →
+        </a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

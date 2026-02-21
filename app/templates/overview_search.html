@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Individual Overview</h2>
+
+<form method="POST">
+    <label>Enter Phone Number</label>
+    <input name="phone" required>
+
+    <button type="submit" class="btn btn-primary">
+        View Profile
+    </button>
+</form>
+
+{% endblock %}

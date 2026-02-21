@@ -1,0 +1,13 @@
+cd path\to\your\project
+
+python -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python run.py
+
+or
+
+set FLASK_APP=app.py
+flask run

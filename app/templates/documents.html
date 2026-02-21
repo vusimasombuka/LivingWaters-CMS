@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.category-link {
+    display:block;
+    margin-bottom:8px;
+    text-decoration:none;
+    padding:8px 10px;
+    border-radius:6px;
+    color:#333;
+    font-size:14px;
+}
+
+.category-link:hover {
+    background:#e9edf3;
+}
+
+.doc-list {
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid #e6eaf0;
+}
+
+.doc-list thead {
+    background:#f5f7fa;
+}
+
+.doc-list th {
+    padding:8px 10px;
+    font-size:13px;
+    font-weight:600;
+    color:#555;
+    text-align:left;
+}
+
+.doc-list td {
+    padding:6px 10px;
+    font-size:14px;
+    border-top:1px solid #f0f2f5;
+    vertical-align:middle;
+}
+
+.doc-list tr:hover {
+    background:#fafbfd;
+}
+
+.actions-cell {
+    text-align:right;
+    width:160px;
+}
+
+.doc-actions {
+    display:inline-flex;
+    gap:6px;
+    align-items:center;
+    justify-content:flex-end;
+}
+
+.btn-download,
+.btn-delete {
+    height:28px;
+    padding:0 10px;
+    border-radius:4px;
+    font-size:11px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+}
+
+.btn-download {
+    background:#27ae60;
+    color:white;
+    text-decoration:none;
+}
+
+.btn-delete {
+    background:#e74c3c;
+    color:white;
+    border:none;
+}
+</style>
+
+
+<div style="display:flex; gap:30px;">
+
+    <!-- LEFT: Categories -->
+    <div style="width:250px;">
+        <h4>Categories</h4>
+
+        <a href="{{ url_for('documents.documents_list') }}" class="category-link">
+            All Documents
+        </a>
+
+        {% for category in categories %}
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <a href="{{ url_for('documents.documents_list', category=category.id) }}"
+               class="category-link"
+               style="flex:1;">
+                {{ category.name }}
+            </a>
+
+            <form method="POST"
+      action="{{ url_for('documents.delete_category', category_id=category.id) }}"
+      style="display:inline;"
+      onsubmit="return confirm('Delete this category and all its documents?')">
+    <button type="submit"
+            style="background:#e5533d; color:white; border:none; padding:4px 8px; border-radius:4px;">
+        ×
+    </button>
+</form>
+
+        </div>
+        {% endfor %}
+
+        <hr>
+
+        <form method="POST" action="{{ url_for('documents.add_category') }}">
+    <input type="text" name="name" placeholder="New Category" required>
+    <button type="submit" class="btn-primary">+ Add</button>
+</form>
+
+    </div>
+
+
+    <!-- RIGHT: Documents -->
+    <div style="flex:1;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Documents</h2>
+
+            <a href="{{ url_for('documents.upload_document') }}"
+               style="background:#2d89ef; color:white; padding:8px 14px; border-radius:6px; text-decoration:none;">
+                + Upload
+            </a>
+        </div>
+
+        <!-- SEARCH -->
+        <form method="GET" style="margin-bottom:20px;">
+            <input type="text"
+                   name="q"
+                   value="{{ search }}"
+                   placeholder="Search documents..."
+                   style="width:70%; padding:8px;">
+            <button type="submit">Search</button>
+        </form>
+
+        {% if documents %}
+        <table class="doc-list">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th class="actions-cell">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>📄 {{ doc.name }}</td>
+                    <td>{{ doc.category.name if doc.category else '' }}</td>
+                    <td>{{ doc.uploaded_by }}</td>
+                    <td>{{ doc.created_at.strftime("%Y-%m-%d") }}</td>
+                    <td class="actions-cell">
+                        <div class="doc-actions">
+                            <a href="{{ url_for('documents.download_document', doc_id=doc.id) }}"
+                               class="btn-download">
+                                Download
+                            </a>
+
+                            <form method="POST"
+      action="{{ url_for('documents.delete_document', doc_id=doc.id) }}"
+      onsubmit="return confirm('Are you sure you want to delete this document?')">
+    <button type="submit" class="btn-sm btn-delete">
+        Delete
+    </button>
+</form>
+
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="margin-top:20px; color:#777;">No documents found.</p>
+        {% endif %}
+
+    </div>
+</div>
+<style>
+.documents-table th,
+.documents-table td {
+    padding: 6px 12px;
+    vertical-align: middle;
+}
+
+.documents-table th {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.documents-table td {
+    font-size: 14px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-download {
+    background-color: #2ea44f;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #e5533d;
+    color: white;
+}
+</style>
+
+{% endblock %}

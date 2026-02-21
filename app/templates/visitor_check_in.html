@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Visitor Check-In{% endblock %}
+
+{% block content %}
+<h2>Visitor Check-In</h2>
+
+<form method="POST">
+
+<label>First Name</label>
+<input name="first_name" required>
+
+<label>Last Name</label>
+<input name="last_name" required>
+
+<label>Phone</label>
+<input name="phone" placeholder="0821234567 or +27821234567" required>
+
+<label>Service Attended</label>
+<select name="service_attended">
+    <option>Sunday Morning</option>
+    <option>Sunday Evening</option>
+    <option>Youth Service</option>
+    <option>Midweek Service</option>
+</select>
+
+<div class="checkbox-row">
+    <input type="checkbox" name="wants_follow_up" checked>
+    <span>Would like follow-up</span>
+</div>
+
+<button type="submit">Check In Visitor</button>
+
+</form>
+{% endblock %}

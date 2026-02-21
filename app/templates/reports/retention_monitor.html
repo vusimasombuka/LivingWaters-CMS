@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Retention Monitor{% endblock %}
+
+{% block content %}
+
+<h2>Retention Monitoring</h2>
+
+<table class="table">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Type</th>
+                <th>Phone</th>
+                <th>Last Check-In</th>
+                <th>Follow-Up SMS Sent</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+    <tbody>
+    {% for row in data %}
+    <tr>
+        <td>{{ row.first_name }}</td>
+        <td>{{ row.last_name }}</td>
+        <td>{{ row.type }}</td>
+        <td>{{ row.phone }}</td>
+        <td>{{ row.last_checkin }}</td>
+        <td>{{ row.sms_count }}</td>
+        <td>{{ row.status }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+</table>
+
+{% endblock %}

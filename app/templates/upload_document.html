@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width:600px; margin:auto;">
+    <h2>Upload Document</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <label>Document Name</label>
+        <input type="text" name="name" required class="input">
+
+        <label style="margin-top:15px;">Select Category</label>
+        <select name="category_id" required class="input">
+            <option value="">-- Select Category --</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label style="margin-top:15px;">Select File</label>
+        <input type="file" name="file" required>
+
+        <button class="btn-primary" style="margin-top:20px;">Upload</button>
+    </form>
+</div>
+
+{% endblock %}

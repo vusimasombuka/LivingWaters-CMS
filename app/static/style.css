@@ -1,0 +1,45 @@
+.table-clean {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.table-clean th,
+.table-clean td {
+    padding: 14px;
+    text-align: left;
+    border-top: 1px solid #eee;
+}
+
+.table-clean thead {
+    background: #f4f6f8;
+}
+
+.btn-primary {
+    background: #1abc9c;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: #3498db;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-top: 5px;
+}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}SMS Logs{% endblock %}
+
+{% block content %}
+
+<h2>SMS Logs</h2>
+
+<form method="GET" style="margin-bottom:20px;">
+    <select name="status">
+        <option value="">All Statuses</option>
+        <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>Pending</option>
+        <option value="sent" {% if status_filter == "sent" %}selected{% endif %}>Sent</option>
+        <option value="failed" {% if status_filter == "failed" %}selected{% endif %}>Failed</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Phone</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Error</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs.items %}
+        <tr>
+            <td>{{ log.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+            <td>{{ log.phone }}</td>
+            <td>{{ log.message_type }}</td>
+            <td>{{ log.status }}</td>
+            <td>{{ log.error or "" }}</td>
+            <td>
+                {% if log.status == "failed" %}
+                    <form method="POST"
+                          action="{{ url_for('sms_logs.retry_sms', sms_id=log.id) }}">
+                        <button type="submit"
+                                style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px;">
+                            Retry
+                        </button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<div style="margin-top:20px; text-align:center;">
+
+    {% if logs.has_prev %}
+        <a href="{{ url_for('sms_logs.list_sms_logs', page=logs.prev_num, status=status_filter) }}">
+            ← Previous
+        </a>
+    {% endif %}
+
+    <span style="margin: 0 15px;">
+        Page {{ logs.page }} of {{ logs.pages }}
+    </span>
+
+    {% if logs.has_next %}
+        <a href="{{ url_for('sms_logs.list_sms_logs', page=logs.next_num, status=status_filter) }}">
+            Next →
+        </a>
+    {% endif %}
+
+</div>
+
+{% endblock %}

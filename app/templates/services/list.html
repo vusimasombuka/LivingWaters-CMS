@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+
+{% block content %}
+
+<h2>Services</h2>
+
+<form method="POST" action="{{ url_for('services.add_service') }}" class="mb-4">
+    <input type="text" name="name" placeholder="Service Name" required>
+
+    <label>Day of Week</label>
+    <select name="day_of_week" required>
+        <option value="">-- Select Day --</option>
+
+        {% set days = [
+            "Monday", "Tuesday", "Wednesday",
+            "Thursday", "Friday", "Saturday", "Sunday"
+        ] %}
+
+        {% for day in days %}
+            <option value="{{ day }}">
+                {{ day }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Service Time</label>
+    <input type="time" name="time" required>
+
+    <button type="submit" class="btn btn-primary">
+        Add Service
+    </button>
+</form>
+
+<hr>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th style="width:25%;">Name</th>
+            <th style="width:20%;">Day</th>
+            <th style="width:15%;">Time</th>
+            <th style="width:10%;">Active</th>
+            <th style="width:30%;">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for s in services %}
+        <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.day_of_week }}</td>
+            <td>{{ s.time }}</td>
+            <td>
+                {{ "Yes" if s.active else "No" }}
+            </td>
+
+            <td style="display:flex; align-items:center; gap:12px;">
+
+                <!-- TOGGLE -->
+                <form method="POST"
+                      action="{{ url_for('services.toggle_service', service_id=s.id) }}">
+                    <label class="switch">
+                        <input type="checkbox"
+                               onchange="this.form.submit()"
+                               {% if s.active %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </form>
+
+                <!-- DELETE -->
+                <form method="POST"
+                      action="{{ url_for('services.delete_service', service_id=s.id) }}"
+                      onsubmit="return confirm('Are you sure you want to delete this service?');">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        Delete
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

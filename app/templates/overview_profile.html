@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Individual Overview</h2>
+<div class="export-buttons" style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <a href="{{ url_for('overview.export_profile', phone=person.phone) }}" 
+       class="btn btn-success" 
+       style="padding: 10px 20px; text-decoration: none; color: white; background: #28a745; border-radius: 5px; display: inline-flex; align-items: center; gap: 5px;">
+        📊 Export CSV
+    </a>
+    
+    <a href="{{ url_for('overview.export_profile_pdf', phone=person.phone) }}" 
+       class="btn btn-danger" 
+       style="padding: 10px 20px; text-decoration: none; color: white; background: #dc3545; border-radius: 5px; display: inline-flex; align-items: center; gap: 5px;">
+        📄 Export PDF
+    </a>
+</div>
+<div class="card">
+    <h3>{{ person.first_name }} {{ person.last_name }}</h3>
+    <p><strong>Type:</strong> {{ person_type }}</p>
+    <p><strong>Phone:</strong> {{ person.phone }}</p>
+</div>
+
+<hr>
+
+<h3>Monthly Giving Summary</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th style="text-align:right;">Total Given</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in monthly_giving %}
+        <tr>
+            <td>{{ g.month }}</td>
+            <td style="text-align:right;">
+                R {{ "%.2f"|format(g.total) }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<hr>
+
+<h3>Attendance History</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in attendance_history %}
+        <tr>
+            <td>{{ a.created_at.strftime("%Y-%m-%d") }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+
+<h3>SMS History</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in sms_history %}
+        <tr>
+            <td>{{ s.created_at.strftime("%Y-%m-%d") }}</td>
+            <td>{{ s.message }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

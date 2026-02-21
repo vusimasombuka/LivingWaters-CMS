@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Master Data{% endblock %}
+
+{% block content %}
+
+<h2 style="margin-bottom:20px;">Master Data</h2>
+
+<!-- CATEGORY TABS -->
+<div class="tab-container">
+    {% for category in categories %}
+        <button class="tab-btn"
+                onclick="showTab('{{ category }}')"
+                id="btn-{{ category }}">
+            {% if category == "offering_type" %}
+    Offering Type
+{% else %}
+    {{ category.replace("_", " ").title() }}
+{% endif %}
+
+        </button>
+    {% endfor %}
+</div>
+
+{% for category in categories %}
+<div class="tab-content" id="tab-{{ category }}" style="display:none;">
+
+    <table class="table compact-table">
+        <thead>
+            <tr>
+                <th>Value</th>
+                <th style="width:160px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in lookup_data[category] %}
+            <tr>
+                <td>
+                    <form method="POST"
+                          action="{{ url_for('inventory.edit_lookup', lookup_id=item.id) }}"
+                          style="display:flex; gap:6px;">
+                        <input type="text"
+                               name="value"
+                               value="{{ item.value }}"
+                               class="compact-input">
+                        <button class="btn btn-sm btn-primary">
+                            Save
+                        </button>
+                    </form>
+                </td>
+
+                <td>
+                    <form method="POST"
+                          action="{{ url_for('inventory.delete_lookup', lookup_id=item.id) }}"
+                          onsubmit="return confirm('Delete this item?');">
+                        <button class="btn btn-sm btn-danger">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ADD NEW -->
+    <form method="POST"
+          action="{{ url_for('inventory.manage_lookup') }}"
+          class="add-form">
+        <input type="hidden" name="category" value="{{ category }}">
+        <input type="text"
+               name="value"
+               placeholder="Add new value"
+               required>
+        <button class="btn btn-success btn-sm">
+            Add
+        </button>
+    </form>
+
+</div>
+{% endfor %}
+
+<script>
+function showTab(category) {
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active-tab');
+    });
+
+    document.getElementById('tab-' + category).style.display = 'block';
+    document.getElementById('btn-' + category).classList.add('active-tab');
+}
+
+// Auto open first tab
+document.addEventListener("DOMContentLoaded", function() {
+    const firstTab = document.querySelector('.tab-btn');
+    if (firstTab) firstTab.click();
+});
+</script>
+
+{% endblock %}

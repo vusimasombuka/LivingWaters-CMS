@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Edit Member{% endblock %}
+
+{% block content %}
+<h2>Edit Member</h2>
+
+<form method="POST" class="form-container">
+
+<label>Title</label>
+<select name="title">
+    <option value="">Select Title</option>
+    {% for t in titles %}
+        <option value="{{ t.value }}">{{ t.value }}</option>
+    {% endfor %}
+</select>
+
+<label>First Name</label>
+<input name="first_name" value="{{ member.first_name }}" required>
+
+<label>Last Name</label>
+<input name="last_name" value="{{ member.last_name }}" required>
+
+<label>Gender</label>
+<select name="gender">
+    <option value="">-- Select --</option>
+    {% for g in ["Male","Female"] %}
+    <option value="{{ g }}" {% if member.gender == g %}selected{% endif %}>{{ g }}</option>
+    {% endfor %}
+</select>
+
+<label>Phone</label>
+<input name="phone" value="{{ member.phone }}" required>
+
+<label>Email</label>
+<input name="email" value="{{ member.email }}">
+
+<label>Street Address</label>
+<input name="street_address" value="{{ member.street_address }}">
+
+<label>Section</label>
+<input name="section" value="{{ member.section }}">
+
+<!-- DATE OF BIRTH -->
+<input type="date" name="date_of_birth" value="{{ member.date_of_birth }}">
+
+<!-- MARITAL STATUS -->
+<label>Marital Status</label>
+<select name="marital_status">
+    <option value="">Select Marital Status</option>
+    {% for ms in marital_statuses %}
+        <option value="{{ ms.value }}">{{ ms.value }}</option>
+    {% endfor %}
+</select>
+
+
+<label>Occupation</label>
+<select name="occupation">
+    <option value="">-- Select --</option>
+    {% for o in ["Employed", "Self Employed", "Unemployed"] %}
+        <option value="{{ o }}" {% if member.occupation == o %}selected{% endif %}>
+            {{ o }}
+        </option>
+    {% endfor %}
+</select>
+
+<label>Department</label>
+<select name="department" required>
+    <option value="">Select Department</option>
+    {% for dept in departments %}
+        <option value="{{ dept.value }}">{{ dept.value }}</option>
+    {% endfor %}
+</select>
+
+<label>Member Status</label>
+<select name="member_status">
+    {% for s in ["Active","Inactive"] %}
+    <option value="{{ s }}" {% if member.member_status == s %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+</select>
+
+<div class="checkbox-row">
+    <input type="checkbox" name="membership_course" {% if member.membership_course %}checked{% endif %}>
+    <span>Membership Course Completed</span>
+</div>
+
+<div class="checkbox-row">
+    <input type="checkbox" name="baptized" {% if member.baptized %}checked{% endif %}>
+    <span>Baptized</span>
+</div>
+
+<label>Emergency Contact Name</label>
+<input name="emergency_contact_name" value="{{ member.emergency_contact_name }}">
+
+<label>Emergency Contact Phone</label>
+<input name="emergency_contact_phone" value="{{ member.emergency_contact_phone }}">
+
+<button type="submit" class="btn-primary">Save Changes</button>
+
+</form>
+{% endblock %}

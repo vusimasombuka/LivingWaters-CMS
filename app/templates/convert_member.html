@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Convert Visitor{% endblock %}
+
+{% block content %}
+<div style="max-width:700px; margin:0 auto;">
+
+    <h2>Convert Visitor to Member</h2>
+
+    <p><strong>Name:</strong> {{ visitor.first_name }} {{ visitor.last_name }}</p>
+    <p><strong>Phone:</strong> {{ visitor.phone }}</p>
+
+    <form method="POST">
+
+        <label>Email</label>
+        <input type="email" name="email">
+
+        <label>Department</label>
+        <input type="text" name="department">
+
+        <br><br>
+        <button type="submit" class="btn">Confirm Conversion</button>
+        <a href="{{ url_for('visitors.visitors_list') }}" class="btn">Cancel</a>
+
+    </form>
+</div>
+{% endblock %}

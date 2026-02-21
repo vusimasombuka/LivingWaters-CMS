@@ -1,0 +1,14 @@
+from app import db
+from app.models.user import User
+from werkzeug.security import generate_password_hash
+
+superadmin = User(
+    username="superadmin",
+    password_hash=generate_password_hash("admin123"),
+    role="super_admin"
+)
+
+db.session.add(superadmin)
+db.session.commit()
+
+print("Super Admin created successfully.")

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Inventory Management</h2>
+
+<form method="POST" action="{{ url_for('inventory.add_item') }}">
+    <div>
+        <label>Item Name</label>
+        <input type="text" name="name" required>
+    </div>
+
+    <div>
+        <label>Quantity</label>
+        <input type="number" name="quantity" required>
+    </div>
+
+    <div>
+        <label>Department</label>
+        <select name="department_id" required>
+            {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label>Notes</label>
+        <textarea name="notes"></textarea>
+    </div>
+
+    <button type="submit">Add Item</button>
+</form>
+
+<hr>
+
+<h3>Inventory Items</h3>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Item</th>
+        <th>Department</th>
+        <th>Quantity</th>
+        <th>Notes</th>
+    </tr>
+
+    {% for item in items %}
+    <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.department.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.notes }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
