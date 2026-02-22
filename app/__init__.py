@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from config import Config
-from app.extensions import db, login_manager, migrate
+from app.extensions import db, login_manager, migrate, scheduler
 import os
 
 
@@ -13,12 +13,9 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
 
-    
-      
-    
-    # ========================================================
-
+    # =========================
     # Import blueprints
+    # =========================
     from app.routes.auth import auth_bp
     from app.routes.bootstrap import bootstrap_bp
     from app.routes.members import members_bp
@@ -33,9 +30,6 @@ def create_app():
     from app.routes.sms_logs import sms_logs_bp
     from app.routes.overview import overview_bp
     from app.routes.services import services_bp
-    
-
-
 
     # Register blueprints
     app.register_blueprint(auth_bp)
@@ -53,21 +47,23 @@ def create_app():
     app.register_blueprint(overview_bp)
     app.register_blueprint(services_bp)
 
-    # Load authentication utilities
-    from app import auth_utils
+    # =========================
+    # ROOT REDIRECT
+    # =========================
+    @app.route("/")
+    def home():
+        return redirect(url_for("auth.login"))
 
+    # =========================
     # Prevent SQLite locking issues
+    # =========================
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         db.session.remove()
 
-    
-
-    # ================= SCHEDULER =================
-
-
-
-    from app.extensions import scheduler
+    # =========================
+    # Scheduler Setup
+    # =========================
     scheduler.init_app(app)
 
     from app.jobs.birthday_sms_job import birthday_sms_job
@@ -75,7 +71,6 @@ def create_app():
     from app.jobs.visitor_followup_job import visitor_followup_job
     from app.jobs.visitor_sms_jobs import mark_visitor_sms_ready
     from app.jobs.absentees_followup_job import absentees_followup_job
-
 
     def run_job_with_context(job_func):
         with app.app_context():
@@ -85,54 +80,39 @@ def create_app():
         scheduler.start()
 
     scheduler.add_job(
-    id="birthday_sms_job",
-    func=lambda: run_job_with_context(birthday_sms_job),
-    trigger="interval",
-    minutes=1,
-)
+        id="birthday_sms_job",
+        func=lambda: run_job_with_context(birthday_sms_job),
+        trigger="interval",
+        minutes=1,
+    )
 
     scheduler.add_job(
-    id="send_ready_sms_job",
-    func=lambda: run_job_with_context(send_ready_sms),
-    trigger="interval",
-    minutes=1,
-)
+        id="send_ready_sms_job",
+        func=lambda: run_job_with_context(send_ready_sms),
+        trigger="interval",
+        minutes=1,
+    )
 
     scheduler.add_job(
-    id="visitor_followup_job",
-    func=lambda: run_job_with_context(visitor_followup_job),
-    trigger="interval",
-    minutes=1,
-)
+        id="visitor_followup_job",
+        func=lambda: run_job_with_context(visitor_followup_job),
+        trigger="interval",
+        minutes=1,
+    )
 
     scheduler.add_job(
-    id="mark_visitor_sms_ready_job",
-    func=lambda: run_job_with_context(mark_visitor_sms_ready),
-    trigger="interval",
-    minutes=1,
-)
+        id="mark_visitor_sms_ready_job",
+        func=lambda: run_job_with_context(mark_visitor_sms_ready),
+        trigger="interval",
+        minutes=1,
+    )
 
     scheduler.add_job(
-    id="absentees_followup_job",
-    func=absentees_followup_job,
-    trigger="interval",
-    days=1,
-    replace_existing=True
-)
+        id="absentees_followup_job",
+        func=lambda: run_job_with_context(absentees_followup_job),
+        trigger="interval",
+        days=1,
+        replace_existing=True,
+    )
 
-
-
-    
-    # ================= AUTO MIGRATION FOR RENDER =================
-
-    from flask_migrate import upgrade
-
-    with app.app_context():
-        try:
-            upgrade()
-            print("Database migration applied successfully.")
-        except Exception as e:
-            print("Migration skipped:", e)
-
-    # ==============================================================
     return app
