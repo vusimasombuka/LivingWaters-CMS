@@ -14,6 +14,10 @@ class Config:
         if db_url.startswith("postgresql://"):
             db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
+        # 👇 FORCE SSL
+        if "sslmode=" not in db_url:
+            db_url += "?sslmode=require"
+
         SQLALCHEMY_DATABASE_URI = db_url
     else:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'cms.db')}"
