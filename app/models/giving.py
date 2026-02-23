@@ -7,7 +7,8 @@ class Giving(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     branch_id = db.Column(
     db.Integer,
-    db.ForeignKey("branches.id", name="fk_giving_branch_id")
+    db.ForeignKey("branches.id", name="fk_giving_branch_id"),
+    nullable=False
 )
 
 

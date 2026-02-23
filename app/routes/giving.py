@@ -17,7 +17,7 @@ from app.services.sms_rotation_service import get_rotated_template
 from datetime import date, datetime, timedelta
 
 from app.models.check_in import CheckIn
-
+from flask_login import current_user
 
 from app.models.service import Service
 
@@ -270,6 +270,7 @@ def add_giving():
 
         # ================= SAVE GIVING =================
         giving = Giving(
+            branch_id=current_user.branch_id,
             phone=phone,  # Can be None
             amount=float(request.form["amount"]),
             giving_type=request.form["giving_type"],

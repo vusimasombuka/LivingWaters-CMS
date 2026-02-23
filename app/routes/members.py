@@ -85,7 +85,7 @@ def add_member():
 
             emergency_contact_name=request.form.get("emergency_contact_name"),
             emergency_contact_phone=request.form.get("emergency_contact_phone"),
-            branch_id=1
+            branch_id=current_user.branch_id
 
         )
 

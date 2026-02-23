@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import date, datetime, timedelta
-
+from flask_login import current_user
 from app.extensions import db
 from app.models.member import Member
 from app.models.visitor import Visitor
@@ -147,7 +147,7 @@ def check_in():
                 first_name=request.form["first_name"],
                 last_name=request.form["last_name"],
                 phone=phone,
-                branch_id=1
+                branch_id=current_user.branch_id
             )
 
             db.session.add(visitor)
@@ -179,7 +179,7 @@ def check_in():
                         related_table="check_in",
                         related_id=visitor.id,
                         status="scheduled",
-                        branch_id=1,
+                        branch_id=current_user.branch_id,
                         template_id=template.id
                     )
 
@@ -218,7 +218,7 @@ def handle_name_based_checkin(first_name, last_name, service_id, today):
             first_name=first_name,
             last_name=last_name,
             phone=None,  # No phone
-            branch_id=1
+            branch_id=current_user.branch_id
         )
         db.session.add(visitor)
         db.session.flush()
@@ -253,7 +253,7 @@ def send_member_sms(member, message_type):
             related_table="member",
             related_id=member.id,
             status="pending",
-            branch_id=1,
+            branch_id=current_user.branch_id,
             template_id=template.id
         )
         db.session.add(sms)
@@ -275,7 +275,7 @@ def send_visitor_sms(visitor, message_type):
             related_table="check_in",
             related_id=visitor.id,
             status="pending",
-            branch_id=1,
+            branch_id=current_user.branch_id,
             template_id=template.id
         )
         db.session.add(sms)
