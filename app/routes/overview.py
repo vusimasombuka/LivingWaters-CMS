@@ -46,7 +46,7 @@ def search():
 def profile(phone):
 
     from app.utils.branching import branch_query, enforce_branch_access
-    from sqlalchemy import func
+    from sqlalchemy import func, or_, extract
 
     member = branch_query(Member).filter_by(phone=phone).first()
     visitor = branch_query(Visitor).filter_by(phone=phone).first()
@@ -61,9 +61,11 @@ def profile(phone):
 
     person_type = "Member" if member else "Visitor"
 
+    # Use date_trunc for PostgreSQL compatibility
+    month_expr = func.date_trunc('month', Giving.created_at)
+
     if member:
         # FIXED: Include giving linked by member_id OR matching phone number
-        # This shows "Unknown" giving records that were made before member registration
         raw_giving = (
             branch_query(Giving)
             .filter(
@@ -73,11 +75,11 @@ def profile(phone):
                 )
             )
             .with_entities(
-                func.to_char(Giving.created_at, 'YYYY-MM'),
+                month_expr,
                 func.sum(Giving.amount)
             )
-            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
-            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .group_by(month_expr)
+            .order_by(month_expr)
             .all()
         )
 
@@ -98,11 +100,11 @@ def profile(phone):
                 )
             )
             .with_entities(
-                func.to_char(Giving.created_at, 'YYYY-MM'),
+                month_expr,
                 func.sum(Giving.amount)
             )
-            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
-            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .group_by(month_expr)
+            .order_by(month_expr)
             .all()
         )
 
@@ -116,8 +118,9 @@ def profile(phone):
     sms_history = SMSLog.query.filter_by(phone=phone)\
         .order_by(SMSLog.created_at.desc()).all()
 
+    # Format the month for display (convert from datetime to string)
     monthly_giving = [
-        {"month": m, "total": float(t)}
+        {"month": m.strftime('%Y-%m') if hasattr(m, 'strftime') else str(m)[:7], "total": float(t)}
         for m, t in raw_giving
     ]
 
