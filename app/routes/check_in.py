@@ -16,6 +16,58 @@ from sqlalchemy.orm import joinedload
 checkin_bp = Blueprint("checkin", __name__)
 
 
+def is_check_in_window_open(service):
+    """
+    Check if check-in is currently allowed for this service.
+    Returns (bool, message) tuple.
+    Window: 2 hours before start time to 2 hours after start time.
+    """
+    from datetime import datetime
+    
+    # Map day names to weekday numbers (Monday=0, Sunday=6)
+    days_map = {
+        'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+        'Friday': 4, 'Saturday': 5, 'Sunday': 6
+    }
+    
+    now = datetime.now()
+    service_day_num = days_map.get(service.day_of_week)
+    
+    if service_day_num is None:
+        return False, "Invalid service day configuration"
+    
+    # Check if today is the service day
+    if now.weekday() != service_day_num:
+        return False, f"Check-in is only available on {service.day_of_week}s"
+    
+    # Parse service time (handle both 24h and 12h formats)
+    try:
+        service_time = datetime.strptime(service.time, "%H:%M").time()
+    except ValueError:
+        try:
+            service_time = datetime.strptime(service.time, "%I:%M %p").time()
+        except ValueError:
+            return False, "Invalid service time format"
+    
+    # Create service datetime for today
+    service_datetime = datetime.combine(now.date(), service_time)
+    
+    # Define window: 2 hours before to 2 hours after
+    window_start = service_datetime - timedelta(hours=2)
+    window_end = service_datetime + timedelta(hours=2)
+    
+    if now < window_start:
+        time_until = window_start - now
+        hours, remainder = divmod(time_until.seconds, 3600)
+        minutes = remainder // 60
+        return False, f"Check-in opens in {hours}h {minutes}m ({service.time})"
+    
+    if now > window_end:
+        return False, f"Check-in closed for this service (ended at {window_end.strftime('%H:%M')})"
+    
+    return True, "Check-in is open"
+
+
 @checkin_bp.route("/check-in", methods=["GET", "POST"])
 @role_required("super_admin", "usher", "admin")
 def check_in():
@@ -38,6 +90,12 @@ def check_in():
             flash("Invalid service selected.", "error")
             return redirect(url_for("checkin.check_in"))
         
+        # CHECK TIME WINDOW
+        allowed, message = is_check_in_window_open(service)
+        if not allowed:
+            flash(f"Check-in unavailable: {message}", "warning")
+            return redirect(url_for("checkin.check_in"))
+        
         branch_id = service.branch_id
         
         # Security check
@@ -49,7 +107,7 @@ def check_in():
         # CASE 1: Has Phone Number
         # ============================================
         if phone:
-            # Check if already checked in today
+            # Check if already checked in today (ONLY if phone provided)
             existing = CheckIn.query.filter_by(
                 phone=phone,
                 service_id=service.id,
@@ -129,6 +187,7 @@ def check_in():
                 flash("First and last name are required.", "error")
                 return redirect(url_for("checkin.check_in_no_phone"))
 
+            # NOTE: No duplicate check here - allow multiple no-phone entries
             # Create visitor without phone
             visitor = Visitor(
                 first_name=first_name,
@@ -227,7 +286,7 @@ def public_check_in(token):
     branch = Branch.query.filter_by(public_token=token).first_or_404()
     
     # Get active services for this branch
-    services = Service.query.filter_by(
+    all_services = Service.query.filter_by(
         branch_id=branch.id, 
         active=True
     ).order_by(
@@ -242,6 +301,8 @@ def public_check_in(token):
         ),
         Service.time
     ).all()
+    
+    services = all_services
     
     if not services:
         return render_template("public_error.html", 
@@ -267,16 +328,24 @@ def public_check_in(token):
         if not service or service.branch_id != branch.id:
             abort(403)
         
-        # Check for duplicate
-        existing = CheckIn.query.filter_by(
-            phone=phone,
-            service_id=service.id,
-            check_in_date=today
-        ).first()
-        
-        if existing:
-            flash("You've already checked in for this service today. Welcome back!", "info")
+        # CHECK TIME WINDOW FOR PUBLIC CHECK-IN
+        allowed, message = is_check_in_window_open(service)
+        if not allowed:
+            flash(f"Check-in unavailable: {message}", "warning")
             return redirect(url_for("checkin.public_check_in", token=token))
+        
+        # Check for duplicate ONLY if phone is provided
+        if phone:
+            existing = CheckIn.query.filter_by(
+                phone=phone,
+                service_id=service.id,
+                check_in_date=today
+            ).first()
+            
+            if existing:
+                flash("You've already checked in for this service today. Welcome back!", "info")
+                return redirect(url_for("checkin.public_check_in", token=token))
+        # NOTE: If no phone, we skip the duplicate check entirely
         
         # Process check-in (simplified logic)
         if phone:
@@ -330,7 +399,7 @@ def public_check_in(token):
             flash(f"Thank you for visiting, {visitor.first_name}!", "success")
             return redirect(url_for("checkin.public_check_in", token=token))
         else:
-            # No phone
+            # No phone - no duplicate check, just create new record
             visitor = Visitor(
                 first_name=first_name,
                 last_name=last_name,

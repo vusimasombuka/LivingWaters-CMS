@@ -13,10 +13,16 @@ class Branch(db.Model):
     # NEW: Public token for QR code access
     public_token = db.Column(db.String(32), unique=True, index=True, nullable=True)
     
+    def __init__(self, **kwargs):
+        super(Branch, self).__init__(**kwargs)
+        # Auto-generate token on creation if not provided
+        if not self.public_token:
+            self.generate_token()
+    
     def generate_token(self):
         """Generate a unique public token for QR codes"""
         if not self.public_token:
-            self.public_token = uuid.uuid4().hex[:16]  # 16 character hex string
+            self.public_token = uuid.uuid4().hex[:16]
             return True
         return False
     
