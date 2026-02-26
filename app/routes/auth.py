@@ -327,7 +327,6 @@ def delete_branch(branch_id):
 
 @auth_bp.route("/setup", methods=["GET", "POST"])
 def setup():
-
     from app.models.user import User
     from app.models.branch import Branch
     from app.extensions import db
@@ -357,17 +356,18 @@ def setup():
         db.session.add(branch)
         db.session.commit()
 
-        # Create super admin
+        # Create super admin - EXPLICITLY SET ROLE
         user = User(
             username=username,
             password_hash=generate_password_hash(password),
-            role="super_admin",
+            role="super_admin",  # <-- MAKE SURE THIS IS HERE
             branch_id=branch.id
         )
 
         db.session.add(user)
         db.session.commit()
 
+        flash("Setup complete! Please login.", "success")
         return redirect(url_for("auth.login"))
 
     return render_template("setup.html")
