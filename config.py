@@ -15,8 +15,9 @@ class Config:
     db_url = os.getenv("DATABASE_URL")
 
     if db_url:
+        # Fix postgres:// to postgresql://
         if db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
 
         if db_url.startswith("postgresql://"):
             db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
@@ -26,6 +27,14 @@ class Config:
             db_url += "?sslmode=require"
 
         SQLALCHEMY_DATABASE_URI = db_url
+        
+        # 👇 ADD THESE POOL SETTINGS TO FIX SSL ERRORS
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+            "pool_size": 10,
+            "max_overflow": 20
+        }
     else:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'cms.db')}"
 
