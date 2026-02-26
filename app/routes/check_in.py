@@ -215,3 +215,143 @@ def send_visitor_sms(visitor, message_type, branch_id, delay=False):
         )
         db.session.add(sms)
         db.session.commit()
+
+        # ================= PUBLIC CHECK-IN (QR CODE) =================
+
+@checkin_bp.route("/welcome/<token>", methods=["GET", "POST"])
+def public_check_in(token):
+    """Public check-in via branch QR code"""
+    from app.models.branch import Branch
+    from sqlalchemy import case
+    
+    branch = Branch.query.filter_by(public_token=token).first_or_404()
+    
+    # Get active services for this branch
+    services = Service.query.filter_by(
+        branch_id=branch.id, 
+        active=True
+    ).order_by(
+        case(
+            (Service.day_of_week == 'Sunday', 1),
+            (Service.day_of_week == 'Monday', 2),
+            (Service.day_of_week == 'Tuesday', 3),
+            (Service.day_of_week == 'Wednesday', 4),
+            (Service.day_of_week == 'Thursday', 5),
+            (Service.day_of_week == 'Friday', 6),
+            (Service.day_of_week == 'Saturday', 7),
+        ),
+        Service.time
+    ).all()
+    
+    if not services:
+        return render_template("public_error.html", 
+                             message="No active services available for this branch.",
+                             branch_name=branch.name)
+
+    if request.method == "POST":
+        service_id = request.form.get("service_id")
+        phone = normalize_sa_phone(request.form.get("phone"))
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        today = date.today()
+        
+        if not service_id:
+            flash("Please select a service.", "warning")
+            return redirect(url_for("checkin.public_check_in", token=token))
+        
+        if not first_name or not last_name:
+            flash("First and last name are required.", "warning")
+            return redirect(url_for("checkin.public_check_in", token=token))
+        
+        service = Service.query.get(service_id)
+        if not service or service.branch_id != branch.id:
+            abort(403)
+        
+        # Check for duplicate
+        existing = CheckIn.query.filter_by(
+            phone=phone,
+            service_id=service.id,
+            check_in_date=today
+        ).first()
+        
+        if existing:
+            flash("You've already checked in for this service today. Welcome back!", "info")
+            return redirect(url_for("checkin.public_check_in", token=token))
+        
+        # Process check-in (simplified logic)
+        if phone:
+            member = Member.query.filter_by(phone=phone, branch_id=branch.id).first()
+            if member:
+                db.session.add(CheckIn(
+                    phone=phone,
+                    member_id=member.id,
+                    service_id=service.id,
+                    check_in_date=today,
+                    branch_id=branch.id
+                ))
+                db.session.commit()
+                send_member_sms(member, "member_returning", branch.id)
+                flash(f"Welcome back, {member.first_name}! Checked in for {service.name}.", "success")
+                return redirect(url_for("checkin.public_check_in", token=token))
+            
+            visitor = Visitor.query.filter_by(phone=phone, branch_id=branch.id).first()
+            if visitor:
+                db.session.add(CheckIn(
+                    phone=phone,
+                    visitor_id=visitor.id,
+                    service_id=service.id,
+                    check_in_date=today,
+                    branch_id=branch.id
+                ))
+                db.session.commit()
+                send_visitor_sms(visitor, "visitor_returning", branch.id, delay=False)
+                flash(f"Welcome back, {visitor.first_name}! Checked in for {service.name}.", "success")
+                return redirect(url_for("checkin.public_check_in", token=token))
+            
+            # New visitor
+            visitor = Visitor(
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                branch_id=branch.id
+            )
+            db.session.add(visitor)
+            db.session.flush()
+            
+            db.session.add(CheckIn(
+                phone=phone,
+                visitor_id=visitor.id,
+                service_id=service.id,
+                check_in_date=today,
+                branch_id=branch.id
+            ))
+            db.session.commit()
+            send_visitor_sms(visitor, "visitor_thank_you", branch.id, delay=True)
+            flash(f"Thank you for visiting, {visitor.first_name}!", "success")
+            return redirect(url_for("checkin.public_check_in", token=token))
+        else:
+            # No phone
+            visitor = Visitor(
+                first_name=first_name,
+                last_name=last_name,
+                phone=None,
+                branch_id=branch.id
+            )
+            db.session.add(visitor)
+            db.session.flush()
+            
+            db.session.add(CheckIn(
+                phone=None,
+                visitor_id=visitor.id,
+                service_id=service.id,
+                check_in_date=today,
+                branch_id=branch.id
+            ))
+            db.session.commit()
+            flash(f"Welcome, {visitor.first_name}! Checked in for {service.name}.", "success")
+            return redirect(url_for("checkin.public_check_in", token=token))
+
+    return render_template("public_checkin.html", 
+                         branch=branch, 
+                         services=services,
+                         token=token)

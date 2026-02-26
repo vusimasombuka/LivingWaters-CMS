@@ -371,3 +371,32 @@ def setup():
         return redirect(url_for("auth.login"))
 
     return render_template("setup.html")
+
+# Add to auth.py or create admin.py
+
+@auth_bp.route("/branches/<int:branch_id>/qr-code")
+@login_required
+@role_required("super_admin", "admin")
+def branch_qr_code(branch_id):
+    """Generate QR code for branch public check-in"""
+    from app.models.branch import Branch
+    
+    branch = Branch.query.get_or_404(branch_id)
+    
+    # Security check
+    if current_user.role != "super_admin" and branch.id != current_user.branch_id:
+        abort(403)
+    
+    # Generate token if missing
+    if not branch.public_token:
+        branch.generate_token()
+        db.session.commit()
+    
+    public_url = url_for('checkin.public_check_in', 
+                        token=branch.public_token, 
+                        _external=True)
+    
+    return render_template("admin/branch_qr.html", 
+                         branch=branch, 
+                         public_url=public_url,
+                         qr_code_url=f"https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={public_url}")

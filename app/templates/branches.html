@@ -27,22 +27,12 @@
             <td>{{ branch.name }}</td>
             <td>{{ branch.location }}</td>
             <td>
-
-                <a href="{{ url_for('auth.edit_branch', branch_id=branch.id) }}">
-                    <button class="btn btn-primary">Edit</button>
-                </a>
-
-                <form method="POST"
-                      action="{{ url_for('auth.delete_branch', branch_id=branch.id) }}"
-                      style="display:inline;"
-                      onsubmit="return confirm('Delete this branch?');">
-
-                    <button type="submit" class="btn btn-danger">
-                        Delete
-                    </button>
-                </form>
-
-            </td>
+    <a href="{{ url_for('auth.edit_branch', branch_id=branch.id) }}" class="btn btn-primary btn-sm">Edit</a>
+    <a href="{{ url_for('auth.branch_qr_code', branch_id=branch.id) }}" class="btn btn-info btn-sm">QR Code</a>
+    <form action="{{ url_for('auth.delete_branch', branch_id=branch.id) }}" method="POST" style="display:inline;">
+        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+    </form>
+</td>
         </tr>
         {% endfor %}
     </tbody>

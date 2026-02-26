@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2>{{ branch.name }} - Check-in QR Code</h2>
+            <p class="text-muted">Print this QR code and place it at the entrance</p>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <img src="{{ qr_code_url }}" 
+                         alt="Check-in QR Code" 
+                         class="img-fluid mb-3"
+                         style="max-width: 400px;">
+                    
+                    <div class="alert alert-info">
+                        <strong>Direct URL:</strong><br>
+                        <code>{{ public_url }}</code>
+                        <br><br>
+                        <a href="{{ public_url }}" target="_blank" class="btn btn-sm btn-primary">
+                            Test Link
+                        </a>
+                        <button onclick="window.print()" class="btn btn-sm btn-secondary">
+                            Print QR Code
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>Instructions:</h5>
+                    <ol class="text-left">
+                        <li>Print this page or save the QR code image</li>
+                        <li>Laminate for durability (optional)</li>
+                        <li>Place at church entrance or on seats</li>
+                        <li>Visitors scan with their phone camera</li>
+                        <li>They select their service and check in</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('auth.branches_list') }}" class="btn btn-secondary mt-3">Back to Branches</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
