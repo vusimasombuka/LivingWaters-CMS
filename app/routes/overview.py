@@ -16,6 +16,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from app.utils.branching import branch_query, enforce_branch_access
+from sqlalchemy import func, or_
 
 
 overview_bp = Blueprint("overview", __name__, url_prefix="/overview")
@@ -61,15 +62,22 @@ def profile(phone):
     person_type = "Member" if member else "Visitor"
 
     if member:
+        # FIXED: Include giving linked by member_id OR matching phone number
+        # This shows "Unknown" giving records that were made before member registration
         raw_giving = (
             branch_query(Giving)
-            .filter(Giving.member_id == member.id)
+            .filter(
+                or_(
+                    Giving.member_id == member.id,
+                    Giving.phone == phone
+                )
+            )
             .with_entities(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
 
@@ -80,15 +88,21 @@ def profile(phone):
             .all()
         )
     else:
+        # FIXED: Include giving linked by visitor_id OR matching phone number
         raw_giving = (
             branch_query(Giving)
-            .filter(Giving.visitor_id == visitor.id)
+            .filter(
+                or_(
+                    Giving.visitor_id == visitor.id,
+                    Giving.phone == phone
+                )
+            )
             .with_entities(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
 
@@ -137,17 +151,22 @@ def export_profile(phone):
     
     from sqlalchemy import func
 
-    # Get data (same queries as profile)
+    # Get data (FIXED: include phone-matched giving)
     if member:
         raw_giving = (
             branch_query(Giving)
             .with_entities(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .filter(Giving.member_id == member.id)
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .filter(
+                or_(
+                    Giving.member_id == member.id,
+                    Giving.phone == phone
+                )
+            )
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
         attendance_history = CheckIn.query.filter_by(member_id=member.id)\
@@ -155,12 +174,17 @@ def export_profile(phone):
     else:
         raw_giving = (
             db.session.query(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .filter(Giving.visitor_id == visitor.id)
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .filter(
+                or_(
+                    Giving.visitor_id == visitor.id,
+                    Giving.phone == phone
+                )
+            )
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
         attendance_history = CheckIn.query.filter_by(visitor_id=visitor.id)\
@@ -243,17 +267,22 @@ def export_profile_pdf(phone):
     
     from sqlalchemy import func
 
-    # Get data (same queries as profile)
+    # Get data (FIXED: include phone-matched giving)
     if member:
         raw_giving = (
             branch_query(Giving)
             .with_entities(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .filter(Giving.member_id == member.id)
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .filter(
+                or_(
+                    Giving.member_id == member.id,
+                    Giving.phone == phone
+                )
+            )
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
 
@@ -266,12 +295,17 @@ def export_profile_pdf(phone):
     else:
         raw_giving = (
             db.session.query(
-                func.strftime("%Y-%m", Giving.created_at),
+                func.to_char(Giving.created_at, 'YYYY-MM'),
                 func.sum(Giving.amount)
             )
-            .filter(Giving.visitor_id == visitor.id)
-            .group_by(func.strftime("%Y-%m", Giving.created_at))
-            .order_by(func.strftime("%Y-%m", Giving.created_at))
+            .filter(
+                or_(
+                    Giving.visitor_id == visitor.id,
+                    Giving.phone == phone
+                )
+            )
+            .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+            .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
             .all()
         )
         attendance_history = CheckIn.query.filter_by(visitor_id=visitor.id)\

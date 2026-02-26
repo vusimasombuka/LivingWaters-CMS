@@ -195,34 +195,17 @@ def export_recent_giving():
 def export_monthly_summary():
 
     from app.utils.branching import branch_query
+    from sqlalchemy import func  # Add this import
 
     raw_monthly = (
-    branch_query(Giving)
-    .with_entities(
-        func.strftime("%Y-%m", Giving.created_at),
-        func.sum(Giving.amount)
-    )
-    .group_by(func.strftime("%Y-%m", Giving.created_at))
-    .order_by(func.strftime("%Y-%m", Giving.created_at))
-    .all()
-    )
-
-    si = StringIO()
-    writer = csv.writer(si)
-
-    writer.writerow(["Month", "Total"])
-
-    for month, total in raw_monthly:
-        writer.writerow([month, float(total)])
-
-    output = si.getvalue()
-
-    return Response(
-        output,
-        mimetype="text/csv",
-        headers={
-            "Content-Disposition": "attachment; filename=monthly_summary.csv"
-        }
+        branch_query(Giving)
+        .with_entities(
+            func.to_char(Giving.created_at, 'YYYY-MM'),
+            func.sum(Giving.amount)
+        )
+        .group_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+        .order_by(func.to_char(Giving.created_at, 'YYYY-MM'))
+        .all()
     )
 
 @giving_bp.route("/add", methods=["GET", "POST"])
