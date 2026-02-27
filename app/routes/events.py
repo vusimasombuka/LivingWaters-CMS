@@ -41,9 +41,11 @@ def events_admin():
         flash("Event added successfully.", "success")
         return redirect(url_for("events.events_admin"))
 
-    # LIST EVENTS (Branch Isolated)
+        # LIST EVENTS (Branch Isolated)
+    from app.models.lookup import Lookup
     events = branch_query(Event).order_by(Event.event_date).all()
-    return render_template("events.html", events=events)
+    departments = Lookup.query.filter_by(category="department", is_active=True).all()
+    return render_template("events.html", events=events, departments=departments)
 
 
 @events_bp.route("/edit/<int:event_id>", methods=["GET", "POST"])
@@ -73,8 +75,10 @@ def edit_event(event_id):
         flash("Event updated successfully.", "success")
         return redirect(url_for("events.events_admin"))
 
-    # GET request - show edit form
-    return render_template("edit_event.html", event=event)
+        # GET request - show edit form
+    from app.models.lookup import Lookup
+    departments = Lookup.query.filter_by(category="department", is_active=True).all()
+    return render_template("edit_event.html", event=event, departments=departments)
 
 
 @events_bp.route("/delete/<int:event_id>", methods=["POST"])
