@@ -9,6 +9,11 @@ from flask import flash
 
 auth_bp = Blueprint("auth", __name__)
 
+@auth_bp.route("/")
+def index():
+    """Redirect root URL to login page"""
+    return redirect(url_for("auth.login"))
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
 
