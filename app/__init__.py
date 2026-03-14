@@ -6,6 +6,7 @@ import logging
 from app.jobs.event_reminder_job import event_reminder_job
 
 
+
 # Setup logging for jobs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def create_app():
         
         # Import jobs here to avoid circular imports
         from app.jobs.birthday_sms_job import birthday_sms_job
-        from app.jobs.sms_sender_job import send_ready_sms
+        from app.jobs.sms_sender_job import run_messaging_jobs
         from app.jobs.visitor_followup_job import visitor_followup_job
         from app.jobs.visitor_sms_jobs import mark_visitor_sms_ready
         from app.jobs.absentees_followup_job import absentees_followup_job
@@ -110,11 +111,11 @@ def create_app():
         
         # SMS Sender - Every 5 minutes (batched)
         scheduler.add_job(
-            id="send_ready_sms_job",
-            func=run_with_context(send_ready_sms),
-            trigger="interval",
-            minutes=5,
-            replace_existing=True
+        id="messaging_jobs",
+        func=run_with_context(run_messaging_jobs),  # This does EVERYTHING
+        trigger="interval",
+        minutes=5,
+        replace_existing=True
         )
         
         # Visitor Follow-up - Mondays at 9:00 AM
@@ -155,6 +156,7 @@ def create_app():
         minute=0,
         replace_existing=True
         )
+
 
         # ================= DATABASE SETUP =================
     with app.app_context():
