@@ -65,8 +65,11 @@ def process_mass_messages():
             if msg.audience_segment_id:
                 segment = AudienceSegment.query.get(msg.audience_segment_id)
                 filters = segment.filter_criteria if segment else {}
+                audience_type = 'members'  # Saved segments are always members
             else:
                 filters = msg.ad_hoc_filters or {}
+                # 🎯 NEW: Extract audience type from filters (default to members)
+                audience_type = filters.pop('_audience_type', 'members') if filters else 'members'
             
             # Determine branch
             branch_id = msg.target_branch_id
@@ -74,33 +77,37 @@ def process_mass_messages():
                 # Use creator's branch if no specific target
                 branch_id = msg.branch_id
             
-            # Get all recipients
-            query = AudienceBuilder.build_query(filters, branch_id)
-            members = query.all()
+            # 🎯 NEW: Get all recipients with audience_type
+            recipients = AudienceBuilder.get_recipients(
+                filters, 
+                branch_id=branch_id,
+                audience_type=audience_type
+            )
             
-            msg.total_recipients = len(members)
+            # Update message with actual count
+            msg.total_recipients = len(recipients)
             msg.status = "sending"
             db.session.commit()
             
             # Create SMSLog records in batches
             batch_size = 100
-            for i in range(0, len(members), batch_size):
-                batch = members[i:i+batch_size]
+            for i in range(0, len(recipients), batch_size):
+                batch = recipients[i:i+batch_size]
                 logs = []
                 
-                for member in batch:
-                    if not member.phone:
+                for person in batch:  # Changed from 'member' to 'person'
+                    if not person.phone:
                         continue
                     
-                    personalized = AudienceBuilder.personalize_message(msg.content, member)
+                    personalized = AudienceBuilder.personalize_message(msg.content, person)
                     
                     logs.append(SMSLog(
-                        phone=member.phone,
+                        phone=person.phone,
                         message=personalized,
                         message_type="mass_message",
                         mass_message_id=msg.id,
                         status="pending",
-                        branch_id=member.branch_id
+                        branch_id=person.branch_id
                     ))
                 
                 if logs:

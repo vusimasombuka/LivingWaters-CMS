@@ -16,7 +16,7 @@
                 <h5 class="mb-0"><i class="fas fa-users"></i> Step 1: Select Audience</h5>
             </div>
             <div class="card-body">
-                <!-- Radio Selection - INLINE JAVASCRIPT -->
+                <!-- Radio Selection -->
                 <div class="mb-4">
                     <div class="d-flex gap-4 align-items-center">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap;">
@@ -28,7 +28,7 @@
                         
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap;">
                             <input type="radio" name="use_segment" value="false" 
-                                   onclick="document.getElementById('savedSection').style.opacity='0.4';document.getElementById('savedSection').style.pointerEvents='none';document.getElementById('segmentSelect').disabled=true;document.getElementById('customSection').style.opacity='1';document.getElementById('customSection').style.pointerEvents='auto';var c=document.getElementById('customSection').getElementsByTagName('*');for(var i=0;i<c.length;i++){if(c[i].tagName=='INPUT'||c[i].tagName=='SELECT')c[i].disabled=false;}document.getElementById('refreshBtn').disabled=false;document.getElementById('recipientCount').innerText='Select filters and click Refresh';"
+                                   onclick="document.getElementById('savedSection').style.opacity='0.4';document.getElementById('savedSection').style.pointerEvents='none';document.getElementById('segmentSelect').disabled=true;document.getElementById('customSection').style.opacity='1';document.getElementById('customSection').style.pointerEvents='auto';var c=document.getElementById('customSection').getElementsByTagName('*');for(var i=0;i<c.length;i++){if(c[i].tagName=='INPUT'||c[i].tagName=='SELECT')c[i].disabled=false;}document.getElementById('refreshBtn').disabled=false;document.getElementById('recipientCount').innerText='Select filters and click Refresh';toggleAudienceFilters();"
                                    style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
                             <span style="font-weight: 600;">Build Custom Audience</span>
                         </label>
@@ -55,8 +55,29 @@
                 <div id="customSection" class="mb-4 p-3 bg-light rounded border" style="opacity: 0.4; pointer-events: none; background-color: #e9ecef;">
                     <h6 class="mb-3 fw-bold">Build Custom Audience (Select "Build Custom Audience" above to enable)</h6>
                     
+                    <!-- 🎯 TARGET AUDIENCE TYPE -->
+                    <div class="mb-4 p-3 bg-white rounded border border-primary border-2">
+                        <label class="form-label fw-bold text-primary">
+                            <i class="fas fa-users"></i> Target Audience Type *
+                        </label>
+                        <select name="audience_type" id="audienceType" class="form-select form-select-lg" required onchange="toggleAudienceFilters()">
+                            <option value="members" selected>All Members</option>
+                            <option value="visitors">All Visitors</option>
+                            <option value="all">Everyone (Members & Visitors)</option>
+                        </select>
+                        <div class="form-text text-muted mt-2">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Members:</strong> Can filter by Gender, Department, etc.<br>
+                            <strong>Visitors:</strong> Phone numbers only (no member filters)<br>
+                            <strong>Everyone:</strong> Both groups combined
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <!-- Gender -->
+                        <div class="col-md-4 mb-3 member-only-filter">
                             <label class="form-label fw-bold">Gender</label>
                             <div style="display: flex; flex-direction: column; gap: 5px;">
                                 <label style="display: flex; align-items: center; gap: 8px;">
@@ -70,7 +91,8 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <!-- Marital Status -->
+                        <div class="col-md-4 mb-3 member-only-filter">
                             <label class="form-label fw-bold">Marital Status</label>
                             <select name="marital_status" class="form-select" multiple size="3" disabled>
                                 {% for opt in filter_config.marital_status.options %}
@@ -79,7 +101,8 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <!-- Department -->
+                        <div class="col-md-4 mb-3 member-only-filter">
                             <label class="form-label fw-bold">Department</label>
                             <select name="department" class="form-select" multiple size="3" disabled>
                                 {% for opt in filter_config.department.options %}
@@ -90,7 +113,8 @@
                     </div>
 
                     <div class="row mt-3">
-                        <div class="col-md-6 mb-3">
+                        <!-- Other Criteria -->
+                        <div class="col-md-6 mb-3 member-only-filter">
                             <label class="form-label fw-bold d-block">Other Criteria</label>
                             <div style="display: flex; gap: 15px;">
                                 <label style="display: flex; align-items: center; gap: 8px;">
@@ -104,7 +128,8 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <!-- Member Status -->
+                        <div class="col-md-6 mb-3 member-only-filter">
                             <label class="form-label fw-bold">Member Status</label>
                             <select name="member_status" class="form-select" multiple size="2" disabled>
                                 {% for opt in filter_config.member_status.options %}
@@ -143,56 +168,56 @@
             </div>
         </div>
 
-<!-- Step 2: Message Content -->
-<div class="card mt-4 shadow-sm">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="fas fa-edit"></i> Step 2: Compose Message</h5>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label fw-bold">Message Title (Internal Reference)</label>
-            <input type="text" name="title" class="form-control" required placeholder="e.g., Men's Meeting Reminder">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold">Message Content</label>
-            <textarea name="content" id="messageContent" class="form-control" rows="4" maxlength="1600" required placeholder="Type your message here..."></textarea>
-            <div class="d-flex justify-content-between mt-1">
-                <small class="text-muted">
-                    <span id="charCount">0</span>/1600 characters
-                </small>
+        <!-- Step 2: Message Content -->
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Step 2: Compose Message</h5>
             </div>
-        </div>
-
-        <div class="card bg-light border">
             <div class="card-body">
-                <strong><i class="fas fa-eye"></i> Preview:</strong>
-                <p class="mb-0 mt-2 fst-italic" id="messagePreview" style="color: #666;">Enter message to see preview...</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Message Title (Internal Reference)</label>
+                    <input type="text" name="title" class="form-control" required placeholder="e.g., Men's Meeting Reminder">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Message Content</label>
+                    <textarea name="content" id="messageContent" class="form-control" rows="4" maxlength="1600" required placeholder="Type your message here..."></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">
+                            <span id="charCount">0</span>/1600 characters
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card bg-light border">
+                    <div class="card-body">
+                        <strong><i class="fas fa-eye"></i> Preview:</strong>
+                        <p class="mb-0 mt-2 fst-italic" id="messagePreview" style="color: #666;">Enter message to see preview...</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<script>
-// Character counter and preview - SEPARATE FROM JINJA2
-document.getElementById('messageContent').addEventListener('input', function() {
-    document.getElementById('charCount').innerText = this.value.length;
-    
-    var text = this.value
-        .replace(/{{ '{{first_name}}' }}/g, 'John')
-        .replace(/{{ '{{last_name}}' }}/g, 'Doe')
-        .replace(/{{ '{{department}}' }}/g, 'Worship Team');
-    
-    var preview = document.getElementById('messagePreview');
-    if (text.trim()) {
-        preview.innerText = text;
-        preview.style.color = '#333';
-    } else {
-        preview.innerText = 'Enter message to see preview...';
-        preview.style.color = '#666';
-    }
-});
-</script>
+        <script>
+            // Character counter and preview
+            document.getElementById('messageContent').addEventListener('input', function() {
+                document.getElementById('charCount').innerText = this.value.length;
+                
+                var text = this.value
+                    .replace(/{{ '{{first_name}}' }}/g, 'John')
+                    .replace(/{{ '{{last_name}}' }}/g, 'Doe')
+                    .replace(/{{ '{{department}}' }}/g, 'Worship Team');
+                
+                var preview = document.getElementById('messagePreview');
+                if (text.trim()) {
+                    preview.innerText = text;
+                    preview.style.color = '#333';
+                } else {
+                    preview.innerText = 'Enter message to see preview...';
+                    preview.style.color = '#666';
+                }
+            });
+        </script>
 
         <!-- Step 3: Schedule -->
         <div class="card mt-4 shadow-sm">
@@ -232,14 +257,55 @@ document.getElementById('messageContent').addEventListener('input', function() {
     </form>
 </div>
 
-<!-- Put script at bottom so DOM is ready -->
+<!-- Scripts -->
 <script>
+// Toggle audience filters based on selection
+function toggleAudienceFilters() {
+    var audienceType = document.getElementById('audienceType').value;
+    var isVisitorOnly = (audienceType === 'visitors');
+    
+    // Get all member-only filter elements
+    var memberFilters = document.querySelectorAll('.member-only-filter');
+    
+    memberFilters.forEach(function(filter) {
+        var inputs = filter.querySelectorAll('input, select');
+        
+        if (isVisitorOnly) {
+            // Disable all inputs for visitor-only
+            inputs.forEach(function(input) {
+                input.disabled = true;
+                if (input.type === 'checkbox') input.checked = false;
+                if (input.tagName === 'SELECT') input.selectedIndex = -1;
+            });
+            filter.style.opacity = '0.4';
+            filter.style.pointerEvents = 'none';
+        } else {
+            // Enable for members or everyone (but only if custom section is active)
+            if (document.getElementById('customSection').style.opacity !== '0.4') {
+                inputs.forEach(function(input) {
+                    input.disabled = false;
+                });
+                filter.style.opacity = '1';
+                filter.style.pointerEvents = 'auto';
+            }
+        }
+    });
+    
+    // Update count when audience changes (if custom is enabled)
+    if (document.getElementById('customSection').style.opacity !== '0.4') {
+        updateCount();
+    }
+}
+
 function updateCount() {
     var filters = {};
     
-    // Only run if custom is enabled (check opacity)
+    // Only run if custom is enabled
     var customSection = document.getElementById('customSection');
     if (customSection.style.opacity === '0.4') return;
+    
+    // Get audience type
+    var audienceType = document.getElementById('audienceType').value;
     
     // Get gender
     var genderBoxes = document.querySelectorAll('input[name="gender"]:checked');
@@ -293,7 +359,11 @@ function updateCount() {
     fetch('/messaging/preview-count', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({filters: filters, branch_id: branchId})
+        body: JSON.stringify({
+            filters: filters, 
+            branch_id: branchId,
+            audience_type: audienceType  // 🎯 NEW: Include audience type
+        })
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
@@ -315,5 +385,9 @@ function updateCount() {
     });
 }
 
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleAudienceFilters();
+});
 </script>
 {% endblock %}

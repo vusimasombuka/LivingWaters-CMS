@@ -15,24 +15,55 @@ visitors_bp = Blueprint("visitors", __name__, url_prefix="/visitors")
 @login_required
 @role_required("super_admin", "admin", "usher")
 def visitors_list():
-
     from app.utils.branching import branch_query
-    from app.models.check_in import CheckIn
+    from sqlalchemy import or_, func, asc, desc
 
     page = request.args.get("page", 1, type=int)
+    search = request.args.get("search", "").strip()
+    sort_by = request.args.get("sort_by", "name")  # 'name' or 'last_visit'
+    sort_order = request.args.get("sort", "asc")   # 'asc' or 'desc'
 
     base_query = branch_query(Visitor)
 
+    # SEARCH: Filter by name or phone
+    if search:
+        search_filter = or_(
+            Visitor.first_name.ilike(f"%{search}%"),
+            Visitor.last_name.ilike(f"%{search}%"),
+            Visitor.phone.ilike(f"%{search}%")
+        )
+        base_query = base_query.filter(search_filter)
+
+    # Build query with check-in data for last visit sorting
     query = (
         base_query
         .outerjoin(CheckIn, CheckIn.visitor_id == Visitor.id)
         .group_by(Visitor.id)
-        .order_by(db.func.max(CheckIn.check_in_date).desc())
     )
+
+    # SORTING Logic
+    if sort_by == "name":
+        # Sort by surname, then first name
+        if sort_order == "desc":
+            query = query.order_by(desc(Visitor.last_name), desc(Visitor.first_name))
+        else:
+            query = query.order_by(asc(Visitor.last_name), asc(Visitor.first_name))
+    else:
+        # Sort by last check-in date (original behavior)
+        if sort_order == "desc":
+            query = query.order_by(func.max(CheckIn.check_in_date).desc())
+        else:
+            query = query.order_by(func.max(CheckIn.check_in_date).asc())
 
     visitors = query.paginate(page=page, per_page=25)
 
-    return render_template("visitors.html", visitors=visitors)
+    return render_template(
+        "visitors.html", 
+        visitors=visitors, 
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
 
 
 

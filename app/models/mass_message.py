@@ -12,6 +12,9 @@ class MassMessage(db.Model):
     audience_segment_id = db.Column(db.Integer, db.ForeignKey("audience_segments.id"), nullable=True)
     ad_hoc_filters = db.Column(db.JSON, nullable=True)
     
+    # 🎯 ADDED: Track who this message targets (members, visitors, or all)
+    audience_type = db.Column(db.String(20), default="members")  # 'members', 'visitors', 'all'
+    
     # Scheduling
     status = db.Column(db.String(20), default="draft")  # draft, scheduled, sending, sent, cancelled, failed
     scheduled_at = db.Column(db.DateTime, nullable=True)

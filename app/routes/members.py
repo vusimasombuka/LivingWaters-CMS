@@ -13,16 +13,39 @@ members_bp = Blueprint("members", __name__, url_prefix="/members")
 @login_required
 @role_required("super_admin", "admin")
 def list_members():
-
     from app.utils.branching import branch_query
+    from sqlalchemy import or_, asc, desc
 
     page = request.args.get("page", 1, type=int)
+    search = request.args.get("search", "").strip()
+    sort_order = request.args.get("sort", "asc")  # Default: A-Z
 
-    members = branch_query(Member) \
-        .order_by(Member.created_at.desc()) \
-        .paginate(page=page, per_page=25)
+    # Base query with branch isolation
+    query = branch_query(Member)
 
-    return render_template("members.html", members=members)
+    # SEARCH: Filter by name or phone
+    if search:
+        search_filter = or_(
+            Member.first_name.ilike(f"%{search}%"),
+            Member.last_name.ilike(f"%{search}%"),
+            Member.phone.ilike(f"%{search}%")
+        )
+        query = query.filter(search_filter)
+
+    # SORT: By surname (last_name), then first_name
+    if sort_order == "desc":
+        query = query.order_by(desc(Member.last_name), desc(Member.first_name))
+    else:
+        query = query.order_by(asc(Member.last_name), asc(Member.first_name))
+
+    members = query.paginate(page=page, per_page=25)
+
+    return render_template(
+        "members.html", 
+        members=members, 
+        search=search, 
+        sort_order=sort_order
+    )
 
 
 @members_bp.route("/add", methods=["GET", "POST"])

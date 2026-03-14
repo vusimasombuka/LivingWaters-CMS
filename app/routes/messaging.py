@@ -161,6 +161,9 @@ def compose():
                 flash("Title and content are required.", "error")
                 return redirect(url_for("messaging.compose"))
             
+            # 🎯 FIXED: Extract audience_type from form
+            audience_type = request.form.get("audience_type", "members")
+            
             use_segment = request.form.get("use_segment") == "true"
             segment_id = request.form.get("segment_id")
             schedule_type = request.form.get("schedule_type", "now")
@@ -183,8 +186,9 @@ def compose():
                 if request.form.getlist("member_status"):
                     filters["member_status"] = request.form.getlist("member_status")
                 
-                if not filters:
-                    flash("Please select at least one filter criteria.", "error")
+                # 🎯 UPDATED: Allow empty filters for visitors, but require audience_type
+                if not filters and audience_type == 'members':
+                    flash("Please select at least one filter criteria for members.", "error")
                     return redirect(url_for("messaging.compose"))
             
             # Determine target branch
@@ -211,7 +215,12 @@ def compose():
                 recipient_count = segment.estimated_count
             else:
                 branch_id = target_branch_id or get_user_branch_filter()
-                recipient_count = AudienceBuilder.get_count(filters, branch_id)
+                # 🎯 FIXED: Pass audience_type to get count
+                recipient_count = AudienceBuilder.get_count(
+                    filters, 
+                    branch_id, 
+                    audience_type=audience_type
+                )
             
             if recipient_count == 0:
                 flash("No recipients match your criteria.", "warning")
@@ -226,7 +235,9 @@ def compose():
                 target_branch_id=target_branch_id,
                 total_recipients=recipient_count,
                 created_by=current_user.id,
-                branch_id=current_user.branch_id
+                branch_id=current_user.branch_id,
+                # 🎯 FIXED: Store audience type (remove underscore prefix when saving)
+                audience_type=audience_type if not use_segment else 'members'
             )
             
             # Handle scheduling
@@ -305,6 +316,9 @@ def preview_count():
         
         filters = data.get("filters", {})
         
+        # Get audience type (members, visitors, or all)
+        audience_type = data.get("audience_type", "members")
+        
         branch_id = get_user_branch_filter()
         if current_user.role == "super_admin" and data.get("branch_id"):
             try:
@@ -312,17 +326,26 @@ def preview_count():
             except ValueError:
                 pass
         
-        count = AudienceBuilder.get_count(filters, branch_id)
+        # Pass audience_type to both methods
+        count = AudienceBuilder.get_count(
+            filters, 
+            branch_id, 
+            audience_type=audience_type
+        )
         
         # Get sample recipients (first 5)
         recipients = AudienceBuilder.get_recipients_paginated(
-            filters, page=1, per_page=5, branch_id=branch_id
+            filters, 
+            page=1, 
+            per_page=5, 
+            branch_id=branch_id,
+            audience_type=audience_type  # Add this parameter
         )
         
         sample = [{
             "name": f"{r.first_name or ''} {r.last_name or ''}".strip(),
             "phone": r.phone,
-            "department": r.department
+            "department": getattr(r, 'department', None)  # Use getattr for visitors
         } for r in recipients.items]
         
         return jsonify({

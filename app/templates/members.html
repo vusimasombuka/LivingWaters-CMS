@@ -4,11 +4,42 @@
 {% block content %}
 <h2>Members</h2>
 
-<a href="{{ url_for('members.add_member') }}">
-    <button class="btn btn-success">+ Add Member</button>
-</a>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <a href="{{ url_for('members.add_member') }}">
+            <button class="btn btn-success">+ Add Member</button>
+        </a>
+    </div>
+</div>
 
-<br><br>
+<!-- Search & Sort Form -->
+<form method="get" class="row g-3 mb-4 align-items-end">
+    <div class="col-md-5">
+        <label class="form-label">Search</label>
+        <input type="text" name="search" class="form-control" 
+               placeholder="Search by name or phone..." 
+               value="{{ search or '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Sort By</label>
+        <select name="sort" class="form-select">
+            <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>
+                Surname A-Z
+            </option>
+            <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>
+                Surname Z-A
+            </option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+    <div class="col-md-2">
+        {% if search or sort_order == 'desc' %}
+            <a href="{{ url_for('members.list_members') }}" class="btn btn-secondary w-100">Clear</a>
+        {% endif %}
+    </div>
+</form>
 
 <table class="table">
     <thead>
@@ -27,12 +58,12 @@
         <td>{{ m.first_name }}</td>
         <td>{{ m.last_name }}</td>
         <td>
-    {% if m.phone %}
-        {{ m.phone }}
-    {% else %}
-        <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
-    {% endif %}
-</td>
+            {% if m.phone %}
+                {{ m.phone }}
+            {% else %}
+                <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
+            {% endif %}
+        </td>
         <td>{{ m.email or "-" }}</td>
 
         <td class="table-actions">
@@ -42,13 +73,14 @@
         </td>
     </tr>
     {% endfor %}
-</tbody>
-
+    </tbody>
 </table>
+
+<!-- Pagination -->
 <div style="margin-top:20px; text-align:center;">
 
     {% if members.has_prev %}
-        <a href="{{ url_for('members.list_members', page=members.prev_num) }}">
+        <a href="{{ url_for('members.list_members', page=members.prev_num, search=search, sort=sort_order) }}">
             ← Previous
         </a>
     {% endif %}
@@ -58,7 +90,7 @@
     </span>
 
     {% if members.has_next %}
-        <a href="{{ url_for('members.list_members', page=members.next_num) }}">
+        <a href="{{ url_for('members.list_members', page=members.next_num, search=search, sort=sort_order) }}">
             Next →
         </a>
     {% endif %}

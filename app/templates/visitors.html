@@ -4,6 +4,46 @@
 {% block content %}
 <h2>Visitors</h2>
 
+<!-- Search & Sort Form -->
+<form method="get" class="row g-3 mb-4 align-items-end">
+    <div class="col-md-4">
+        <label class="form-label">Search</label>
+        <input type="text" name="search" class="form-control" 
+               placeholder="Search by name or phone..." 
+               value="{{ search or '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Sort By</label>
+        <select name="sort_by" class="form-select">
+            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>
+                Name (Surname)
+            </option>
+            <option value="last_visit" {% if sort_by == 'last_visit' %}selected{% endif %}>
+                Last Visit Date
+            </option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Order</label>
+        <select name="sort" class="form-select">
+            <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>
+                {% if sort_by == 'name' %}A-Z{% else %}Oldest First{% endif %}
+            </option>
+            <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>
+                {% if sort_by == 'name' %}Z-A{% else %}Newest First{% endif %}
+            </option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+    <div class="col-md-1">
+        {% if search or sort_by != 'name' or sort_order == 'desc' %}
+            <a href="{{ url_for('visitors.visitors_list') }}" class="btn btn-secondary w-100">Clear</a>
+        {% endif %}
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -21,44 +61,45 @@
         {% for visitor in visitors.items %}
         <tr>
             <td>{{ visitor.first_name }}</td>
-<td>{{ visitor.last_name }}</td>
-<td>
-    {% if visitor.phone %}
-        {{ visitor.phone }}
-    {% else %}
-        <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
-    {% endif %}
-</td>
+            <td>{{ visitor.last_name }}</td>
+            <td>
+                {% if visitor.phone %}
+                    {{ visitor.phone }}
+                {% else %}
+                    <span style="color: #e74c3c; font-weight: bold;">⚠️ No phone</span>
+                {% endif %}
+            </td>
 
-<td>
-    {% if visitor.last_visit %}
-        {{ visitor.last_visit.strftime("%Y-%m-%d") }}
-    {% else %}
-        —
-    {% endif %}
-</td>
+            <td>
+                {% if visitor.last_visit %}
+                    {{ visitor.last_visit.strftime("%Y-%m-%d") }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
 
-<td>{{ visitor.last_service or "—" }}</td>
+            <td>{{ visitor.last_service or "—" }}</td>
 
-<td>{{ visitor.visit_count }}</td>
+            <td>{{ visitor.visit_count }}</td>
 
-<td>
-    {% if current_user.role in ["admin", "super_admin"] %}
-        <a href="{{ url_for('visitors.convert_to_member', visitor_id=visitor.id) }}"
-           class="btn btn-primary btn-sm">Convert</a>
-    {% else %}
-        —
-    {% endif %}
-</td>
-
+            <td>
+                {% if current_user.role in ["admin", "super_admin"] %}
+                    <a href="{{ url_for('visitors.convert_to_member', visitor_id=visitor.id) }}"
+                       class="btn btn-primary btn-sm">Convert</a>
+                {% else %}
+                    —
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<!-- Pagination -->
 <div style="margin-top:20px; text-align:center;">
 
     {% if visitors.has_prev %}
-        <a href="{{ url_for('visitors.visitors_list', page=visitors.prev_num) }}">
+        <a href="{{ url_for('visitors.visitors_list', page=visitors.prev_num, search=search, sort_by=sort_by, sort=sort_order) }}">
             ← Previous
         </a>
     {% endif %}
@@ -68,7 +109,7 @@
     </span>
 
     {% if visitors.has_next %}
-        <a href="{{ url_for('visitors.visitors_list', page=visitors.next_num) }}">
+        <a href="{{ url_for('visitors.visitors_list', page=visitors.next_num, search=search, sort_by=sort_by, sort=sort_order) }}">
             Next →
         </a>
     {% endif %}
