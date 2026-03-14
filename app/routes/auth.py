@@ -207,24 +207,40 @@ def edit_user(user_id):
 @login_required
 @role_required("admin", "super_admin")
 def delete_user(user_id):
+    from app.models.mass_message import MassMessage
+    from app.models.audience_segment import AudienceSegment
 
     user = User.query.get_or_404(user_id)
 
-    # 🔒 Block cross-branch deletion (admin cannot delete other branches)
     if current_user.role != "super_admin":
         if user.branch_id != current_user.branch_id:
             abort(403)
 
-    # 🔒 Super admin accounts can NEVER be deleted (by anyone)
     if user.role == "super_admin":
         flash("Super admin accounts cannot be deleted.", "error")
         return redirect(url_for("auth.users_list"))
 
-    # 🔒 Prevent self-deletion
     if user.id == current_user.id:
         flash("You cannot delete your own account.", "error")
         return redirect(url_for("auth.users_list"))
 
+    # 🎯 CRITICAL FIX: Remove user references before deleting
+    # PostgreSQL enforces foreign keys strictly (unlike SQLite)
+    
+    # Set created_by to NULL for all mass messages by this user
+    MassMessage.query.filter_by(created_by=user.id).update(
+        {"created_by": None}, synchronize_session=False
+    )
+    
+    # Set created_by to NULL for all audience segments by this user
+    AudienceSegment.query.filter_by(created_by=user.id).update(
+        {"created_by": None}, synchronize_session=False
+    )
+    
+    # Commit these updates first to clear foreign key constraints
+    db.session.commit()
+
+    # Now safe to delete the user
     db.session.delete(user)
     db.session.commit()
 
