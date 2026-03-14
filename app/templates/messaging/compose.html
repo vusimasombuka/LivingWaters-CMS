@@ -386,8 +386,21 @@ function updateCount() {
 }
 
 // Initialize on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     toggleAudienceFilters();
+    
+    // 🎯 SMART AUTO-REFRESH: Only when filters change
+    var filterInputs = document.querySelectorAll('#customSection input, #customSection select, #audienceType');
+    
+    filterInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+            // Only update if custom section is active
+            if (document.getElementById('customSection').style.opacity !== '0.4') {
+                updateCount();
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

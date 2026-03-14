@@ -156,27 +156,43 @@ def create_app():
         replace_existing=True
         )
 
-    # ================= AUTO MIGRATION FOR RENDER =================
-    #with app.app_context():
-    #   try:
-    #       from flask_migrate import upgrade
-    #        upgrade()
-    #        logger.info("Database migration applied successfully.")
-    #    except Exception as e:
-    #        logger.warning(f"Migration skipped: {e}")
-    #        
-    #    # Ensure at least one branch exists for setup
-    #    if Branch.query.count() == 0:
-    #        logger.info("No branches found. Ready for /setup")
-
-        # ================= CREATE TABLES (Development Only) =================
+        # ================= DATABASE SETUP =================
     with app.app_context():
-        db.create_all()  # Creates all tables based on your models
-        logger.info("Database tables created")
+        # For new deployments: run migrations automatically
+        # This ensures database is always at latest schema
+        try:
+            from flask_migrate import upgrade
+            upgrade()
+            logger.info("Database migrations applied successfully")
+        except Exception as e:
+            # If migrations fail (fresh DB), create tables
+            logger.warning(f"Migration failed ({e}), creating tables...")
+            db.create_all()
+            logger.info("Database tables created (initial setup)")
         
         # Check if setup needed
         if Branch.query.count() == 0:
             logger.info("No branches found. Ready for /setup")
-    # ================================================================
+    
+    # ================= CLI COMMANDS =================
+    @app.cli.command("init-db")
+    def init_db():
+        """Initialize database for new organization"""
+        with app.app_context():
+            db.create_all()
+            print("Database tables created. Run 'flask db upgrade' to apply migrations.")
+            print("Then visit /setup to create your first branch and super admin.")
+
+    @app.cli.command("reset-db")
+    def reset_db():
+        """⚠️ DANGER: Drop and recreate all tables"""
+        with app.app_context():
+            confirm = input("This will DELETE ALL DATA. Type 'yes' to confirm: ")
+            if confirm == "yes":
+                db.drop_all()
+                db.create_all()
+                print("Database reset complete.")
+            else:
+                print("Cancelled.")
     
     return app
