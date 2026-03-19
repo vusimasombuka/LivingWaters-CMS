@@ -2,8 +2,9 @@
 {% block title %}Giving{% endblock %}
 
 {% block content %}
+{% if current_user.role in ["super_admin", "finance"] %}
 <h2>Offering</h2>
-
+{% if current_user.role in ["super_admin", "finance"] %}
 <a href="{{ url_for('giving.add_giving') }}">
     <button class="btn btn-primary">+ Add Offering</button>
 </a>
@@ -75,5 +76,9 @@
     {% endif %}
 
 </div>
+
+{% else %}
+<p>Access restricted.</p>
+{% endif %}
 
 {% endblock %}

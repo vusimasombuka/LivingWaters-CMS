@@ -316,7 +316,7 @@ def attendance_trend():
 
 @reports_bp.route("/reports/giving", methods=["GET"])
 @login_required
-@role_required("finance", "super_admin")
+@role_required("finance", "admin", "super_admin")
 def giving_analytics():
 
     year = request.args.get("year", type=int) or date.today().year
@@ -391,7 +391,7 @@ def giving_analytics():
 
 @reports_bp.route("/reports/giving/export")
 @login_required
-@role_required("finance", "super_admin")
+@role_required("finance", "admin", "super_admin")
 def export_giving_csv():
     import csv
     from flask import Response

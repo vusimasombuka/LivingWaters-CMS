@@ -2,6 +2,7 @@
 {% block title %}Add Giving{% endblock %}
 
 {% block content %}
+{% if current_user.role in ["super_admin", "finance"] %}
 <h2>Add Giving</h2>
 
 <form method="POST">
@@ -33,4 +34,9 @@
 
 <button type="submit" class="btn-primary">Save</button>
 </form>
+
+{% else %}
+<p>Access denied.</p>
+{% endif %}
+
 {% endblock %}

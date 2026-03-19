@@ -670,13 +670,13 @@ input[type="checkbox"] {
         <a class="disabled-link">Attendance Analytics</a>
     {% endif %}
 
-    {% if current_user.role in ["finance", "admin", "super_admin"] %}
+    {% if current_user.role in ["finance", "super_admin"] %}
     <a href="{{ url_for('giving.giving_dashboard') }}">Offering</a>
     {% else %}
         <a class="disabled-link">Giving</a>
     {% endif %}
 
-    {% if current_user.role in ["finance", "admin", "super_admin"] %}
+    {% if current_user.role in ["finance", "super_admin"] %}
         <a href="{{ url_for('reports.giving_analytics') }}">Offering Analytics</a>
     {% else %}
         <a class="disabled-link">Offering Analytics</a>

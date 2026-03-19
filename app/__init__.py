@@ -196,5 +196,12 @@ def create_app():
                 print("Database reset complete.")
             else:
                 print("Cancelled.")
+
+
+    from flask import render_template
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template("403.html"), 403            
     
     return app

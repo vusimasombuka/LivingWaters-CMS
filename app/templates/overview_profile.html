@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+{% if current_user.role in ["super_admin", "finance"] %}
 
 <h2>Individual Overview</h2>
 <div class="export-buttons" style="margin-bottom: 20px; display: flex; gap: 10px;">
@@ -82,5 +83,7 @@
         {% endfor %}
     </tbody>
 </table>
+
+
 
 {% endblock %}

@@ -31,7 +31,7 @@ from sqlalchemy import func, extract
 
 @giving_bp.route("/dashboard")
 @login_required
-@role_required("super_admin", "finance")
+@role_required("super_admin", "admin", "finance")
 def giving_dashboard():
 
     from app.utils.branching import branch_query
@@ -154,7 +154,7 @@ from io import StringIO
 
 @giving_bp.route("/export/recent")
 @login_required
-@role_required("super_admin", "finance")
+@role_required("super_admin", "admin", "finance")
 def export_recent_giving():
 
     from app.utils.branching import branch_query
@@ -191,7 +191,7 @@ def export_recent_giving():
 
 @giving_bp.route("/export/monthly")
 @login_required
-@role_required("super_admin", "finance")
+@role_required("super_admin", "admin", "finance")
 def export_monthly_summary():
 
     from app.utils.branching import branch_query
@@ -210,7 +210,7 @@ def export_monthly_summary():
 
 @giving_bp.route("/add", methods=["GET", "POST"])
 @login_required
-@role_required("super_admin", "finance")
+@role_required("super_admin", "admin", "finance")
 def add_giving():
 
     from app.models.lookup import Lookup

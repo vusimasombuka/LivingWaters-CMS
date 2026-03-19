@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-
+{% if current_user.role in ["super_admin", "finance"] %}
 <h2>All Giving Records</h2>
 
 <table style="width:100%; border-collapse: collapse;">
@@ -21,5 +21,9 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% else %}
+<p>Access restricted.</p>
+{% endif %}
 
 {% endblock %}
