@@ -251,7 +251,7 @@ def delete_user(user_id):
 # ================= BRANCH LIST =================
 @auth_bp.route("/branches")
 @login_required
-@role_required("super_admin")
+@role_required("super_admin", "admin")
 def branches_list():
 
     from app.models.branch import Branch
