@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Manage Alerts - {{ item.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width:800px; margin:0 auto; padding:20px;">
+    
+    <div style="margin-bottom:20px;">
+        <a href="{{ url_for('inventory.inventory_home') }}" style="color:#3b82f6; text-decoration:none; font-size:14px;">← Back to Inventory</a>
+    </div>
+
+    <h2 style="margin-bottom:10px;">Stock Alert Recipients</h2>
+    <h3 style="color:#6b7280; font-weight:normal; margin-bottom:20px;">{{ item.name }}</h3>
+    
+    <div style="background:#fef3c7; padding:15px; border-radius:8px; margin-bottom:25px; border-left:4px solid #f59e0b;">
+        <strong>Current Stock:</strong> {{ item.quantity }} | 
+        <strong>Minimum Level:</strong> {{ item.min_stock_level }} |
+        <strong>Status:</strong> 
+        {% if item.is_low_stock_alert_active %}
+            <span style="color:#dc2626; font-weight:bold;">🔴 Alert Active (Sending notifications)</span>
+        {% else %}
+            <span style="color:#10b981; font-weight:bold;">🟢 OK</span>
+        {% endif %}
+    </div>
+
+    <div style="background:white; padding:25px; border-radius:12px; margin-bottom:25px; border:1px solid #e5e7eb;">
+        <h3 style="margin-top:0; color:#374151; font-size:18px;">Add Responsible Person</h3>
+        <form method="POST">
+            <div style="display:grid; gap:12px;">
+                <input type="text" name="name" placeholder="Full Name" required 
+                       style="padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <input type="tel" name="phone" placeholder="Phone (for SMS)" 
+                           style="padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                    <input type="email" name="email" placeholder="Email Address" 
+                           style="padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                </div>
+                
+                <div style="margin:10px 0; display:flex; gap:20px;">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" name="notify_sms" checked style="width:16px; height:16px;"> 
+                        <span>Send SMS Alerts</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" name="notify_email" checked style="width:16px; height:16px;"> 
+                        <span>Send Email Alerts</span>
+                    </label>
+                </div>
+                
+                <button type="submit" 
+                        style="padding:10px 20px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:500;">
+                    Add Person
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e5e7eb;">
+        <h3 style="margin-top:0; color:#374151; font-size:18px;">Current Recipients ({{ persons|length }})</h3>
+        
+        {% if persons %}
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f9fafb;">
+                    <th style="padding:12px; text-align:left; font-size:14px; color:#374151; border-bottom:2px solid #e5e7eb;">Name</th>
+                    <th style="padding:12px; text-align:center; font-size:14px; color:#374151; border-bottom:2px solid #e5e7eb;">Phone</th>
+                    <th style="padding:12px; text-align:center; font-size:14px; color:#374151; border-bottom:2px solid #e5e7eb;">Email</th>
+                    <th style="padding:12px; text-align:center; font-size:14px; color:#374151; border-bottom:2px solid #e5e7eb;">Notifications</th>
+                    <th style="padding:12px; text-align:center; font-size:14px; color:#374151; border-bottom:2px solid #e5e7eb;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for person in persons %}
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:12px; font-weight:500;">{{ person.name }}</td>
+                    <td style="padding:12px; text-align:center; color:#6b7280;">{{ person.phone or '-' }}</td>
+                    <td style="padding:12px; text-align:center; color:#6b7280;">{{ person.email or '-' }}</td>
+                    <td style="padding:12px; text-align:center;">
+                        {% if person.notify_sms %}<span style="background:#dbeafe; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:11px; margin-right:4px;">SMS</span>{% endif %}
+                        {% if person.notify_email %}<span style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:11px;">Email</span>{% endif %}
+                    </td>
+                    <td style="padding:12px; text-align:center;">
+                        <form method="POST" action="{{ url_for('inventory.delete_responsible_person', person_id=person.id) }}" 
+                              onsubmit="return confirm('Remove {{ person.name }}?')" style="display:inline;">
+                            <button type="submit" 
+                                    style="padding:6px 12px; background:#ef4444; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">
+                                Remove
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding:40px; color:#9ca3af;">
+            <p>No responsible persons added yet.</p>
+            <p style="font-size:14px;">Add someone above to receive low stock alerts.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

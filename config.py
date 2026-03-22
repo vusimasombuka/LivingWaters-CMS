@@ -1,34 +1,36 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-SERVER_NAME = os.getenv("SERVER_NAME", None)
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-
+    
+    # Existing Clickatell settings
     CLICKATELL_API_KEY = os.getenv("CLICKATELL_API_KEY")
     CLICKATELL_SENDER_ID = os.getenv("CLICKATELL_SENDER_ID")
     
+    # NEW: Email Configuration for info@livingwaters.africa
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")  # or your provider
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "true").lower() == "true"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "false").lower() == "true"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "info@livingwaters.africa")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")  # App-specific password
+    MAIL_DEFAULT_SENDER = ("Living Waters Inventory", "info@livingwaters.africa")
+    
+    # Database configuration (keep existing)
     db_url = os.getenv("DATABASE_URL")
-
     if db_url:
-        # Fix postgres:// to postgresql://
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
-
         if db_url.startswith("postgresql://"):
             db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
-
-        # 👇 FORCE SSL
         if "sslmode=" not in db_url:
             db_url += "?sslmode=require"
-
         SQLALCHEMY_DATABASE_URI = db_url
-        
-        # 👇 ADD THESE POOL SETTINGS TO FIX SSL ERRORS
         SQLALCHEMY_ENGINE_OPTIONS = {
             "pool_pre_ping": True,
             "pool_recycle": 300,
@@ -37,5 +39,5 @@ class Config:
         }
     else:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'cms.db')}"
-
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False

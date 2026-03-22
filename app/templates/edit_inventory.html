@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Edit Inventory - {{ item.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width:600px; margin:0 auto; padding:20px;">
+    
+    <div style="margin-bottom:20px;">
+        <a href="{{ url_for('inventory.inventory_home') }}" style="color:#3b82f6; text-decoration:none; font-size:14px;">← Back to Inventory</a>
+    </div>
+
+    <h2 style="margin-bottom:20px;">Edit Inventory Item</h2>
+    
+    <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e5e7eb;">
+        <form method="POST" action="{{ url_for('inventory.edit_inventory', item_id=item.id) }}">
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500; color:#374151;">Item Name</label>
+                <input type="text" name="name" value="{{ item.name }}" required 
+                       style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:500; color:#374151;">Current Quantity</label>
+                    <input type="number" name="quantity" value="{{ item.quantity }}" required min="0"
+                           style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-weight:500; color:#374151;">Min Stock Level</label>
+                    <input type="number" name="min_stock_level" value="{{ item.min_stock_level }}" min="0"
+                           style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500; color:#374151;">Department</label>
+                <select name="department_id" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:white;">
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if item.department_id == dept.id %}selected{% endif %}>
+                            {{ dept.value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; font-weight:500; color:#374151;">Notes</label>
+                <textarea name="notes" rows="3"
+                          style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; resize:vertical;">{{ item.notes or '' }}</textarea>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" 
+                        style="flex:1; padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:500;">
+                    Update Item
+                </button>
+                <a href="{{ url_for('inventory.inventory_home') }}" 
+                   style="flex:1; padding:12px; background:#6b7280; color:white; border:none; border-radius:6px; font-size:14px; text-decoration:none; text-align:center; display:inline-flex; align-items:center; justify-content:center; font-weight:500;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Stock Update Section -->
+    <div style="background:#f0fdf4; padding:20px; border-radius:12px; margin-top:20px; border:1px solid #bbf7d0;">
+        <h4 style="margin-top:0; color:#166534; font-size:16px;">Quick Stock Update</h4>
+        <p style="color:#166534; font-size:14px; margin-bottom:15px;">Use this to quickly adjust quantity after monthly count or new purchases.</p>
+        
+        <form method="POST" action="{{ url_for('inventory.edit_inventory', item_id=item.id) }}" style="display:flex; gap:10px; align-items:center;">
+            <input type="hidden" name="name" value="{{ item.name }}">
+            <input type="hidden" name="department_id" value="{{ item.department_id }}">
+            <input type="hidden" name="min_stock_level" value="{{ item.min_stock_level }}">
+            <input type="hidden" name="notes" value="{{ item.notes or '' }}">
+            
+            <div style="flex:1;">
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="0"
+                       style="width:100%; padding:10px; border:1px solid #86efac; border-radius:6px; font-size:14px;">
+            </div>
+            <button type="submit" 
+                    style="padding:10px 20px; background:#22c55e; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:500; white-space:nowrap;">
+                Update Quantity Only
+            </button>
+        </form>
+    </div>
+
+    <!-- Delete Item -->
+    <div style="margin-top:20px; padding-top:20px; border-top:1px solid #e5e7eb;">
+        <form method="POST" action="{{ url_for('inventory.delete_inventory', item_id=item.id) }}" 
+              onsubmit="return confirm('Are you sure you want to delete {{ item.name }}? This cannot be undone.')">
+            <button type="submit" 
+                    style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:500;">
+                Delete Item
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

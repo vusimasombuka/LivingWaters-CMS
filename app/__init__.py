@@ -4,8 +4,9 @@ from app.extensions import db, login_manager, migrate, scheduler
 import os
 import logging
 from app.jobs.event_reminder_job import event_reminder_job
-
-
+from app.jobs.stock_alert_job import stock_alert_job
+from flask_mail import Mail
+mail = Mail()
 
 # Setup logging for jobs
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,9 @@ logger = logging.getLogger(__name__)
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    mail.init_app(app)
+
 
     # Initialize extensions
     db.init_app(app)
@@ -154,6 +158,17 @@ def create_app():
         trigger="cron",
         hour=8,  # Run at 8am daily
         minute=0,
+        replace_existing=True
+        )
+
+        # Stock alerts: Run Monday (SMS + Email) and Thursday (Email only) at 8:00 AM
+        scheduler.add_job(
+        func=stock_alert_job,
+        trigger="cron",
+        day_of_week="mon,thu",
+        hour=8,
+        minute=0,
+        id="stock_alert_job",
         replace_existing=True
         )
 

@@ -2,78 +2,178 @@
 {% block title %}Inventory{% endblock %}
 
 {% block content %}
-
-<div style="max-width:1100px; margin:0 auto;">
+<div style="max-width:1200px; margin:0 auto;">
 
     <h2 style="margin-bottom:20px;">Church Inventory</h2>
 
     <!-- ================= ADD ITEM FORM ================= -->
-    <div style="background:white; padding:20px; border-radius:12px; margin-bottom:30px;">
+    <div style="background:white; padding:20px; border-radius:12px; margin-bottom:30px; border:1px solid #e5e7eb;">
         <h3>Add Inventory Item</h3>
-
-        <form method="POST" action="{{ url_for('inventory.add_inventory') }}">
-
-            <input type="text"
-                   name="name"
-                   placeholder="Item Name"
-                   required
-                   class="form-control"
-                   style="margin-bottom:10px;">
-
-            <input type="number"
-                   name="quantity"
-                   placeholder="Quantity"
-                   required
-                   class="form-control"
-                   style="margin-bottom:10px;">
-
-            <textarea name="notes"
-                      placeholder="Notes (optional)"
-                      class="form-control"
-                      style="margin-bottom:10px;"></textarea>
-
-            <select name="department_id"
-                    required
-                    class="form-control"
-                    style="margin-bottom:10px;">
-                <option value="">Select Department</option>
-                {% for dept in departments %}
-                    <option value="{{ dept.id }}">{{ dept.value }}</option>
-                {% endfor %}
-            </select>
-
-            <button class="btn btn-primary">Add Item</button>
+        
+        <form method="POST" action="{{ url_for('inventory.add_inventory') }}" id="inventoryForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <input type="text" name="name" placeholder="Item Name" required class="form-control">
+                <input type="number" name="quantity" placeholder="Current Quantity" required class="form-control" min="0">
+                <input type="number" name="min_stock_level" placeholder="Min Stock Level (alert threshold)" 
+                       class="form-control" min="0" value="0">
+                <select name="department_id" required class="form-control">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <textarea name="notes" placeholder="Notes (optional)" class="form-control" 
+                      style="margin-top:10px; width:100%;"></textarea>
+            
+            <!-- Responsible Persons Section -->
+            <h4 style="margin-top:20px; color:#374151;">Responsible Persons (for Low Stock Alerts)</h4>
+            <div id="responsiblePersons">
+                <div class="person-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" name="responsible_name[]" placeholder="Name" class="form-control">
+                    <input type="tel" name="responsible_phone[]" placeholder="Phone (SMS)" class="form-control">
+                    <input type="email" name="responsible_email[]" placeholder="Email" class="form-control">
+                    <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">Remove</button>
+                </div>
+            </div>
+            <button type="button" onclick="addPersonRow()" class="btn btn-secondary" style="margin: 10px 0;">+ Add Another Person</button>
+            
+            <br>
+            <button class="btn btn-primary" style="margin-top:15px;">Add Item</button>
         </form>
     </div>
 
-    <!-- ================= INVENTORY TABLE ================= -->
-    <div style="background:white; padding:20px; border-radius:12px;">
+    <!-- ================= INVENTORY LIST (Grouped by Department) ================= -->
+    <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e5e7eb;">
         <h3>Inventory List</h3>
-
-        <table style="width:100%; border-collapse:collapse;">
-            <thead style="background:#f3f4f6;">
-                <tr>
-                    <th style="padding:8px; text-align:left;">Item</th>
-                    <th style="padding:8px; text-align:left;">Quantity</th>
-                    <th style="padding:8px; text-align:left;">Department</th>
-                    <th style="padding:8px; text-align:left;">Notes</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr style="border-top:1px solid #eee;">
-                    <td style="padding:8px;">{{ item.name }}</td>
-                    <td style="padding:8px;">{{ item.quantity }}</td>
-                    <td style="padding:8px;">
-                        {{ item.department.value if item.department else "" }}
-                    </td>
-                    <td style="padding:8px;">{{ item.notes }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        
+        {% if items_by_department %}
+            {% for dept_name, dept_items in items_by_department.items() %}
+            <div class="department-group" style="margin-bottom:15px; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                <!-- Department Header (Clickable) -->
+                <div onclick="toggleDepartment('dept-{{ loop.index }}')" 
+                     style="background:#f3f4f6; padding:15px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span id="icon-dept-{{ loop.index }}" style="font-size:18px; transition:transform 0.2s;">▼</span>
+                        <strong style="font-size:16px; color:#374151;">{{ dept_name }}</strong>
+                        <span style="background:#6b7280; color:white; padding:2px 10px; border-radius:12px; font-size:12px;">{{ dept_items|length }} items</span>
+                    </div>
+                    <div style="font-size:14px; color:#6b7280;">
+                        Total Value: {{ dept_items|sum(attribute='quantity') }} units
+                    </div>
+                </div>
+                
+                <!-- Department Items (Collapsible) -->
+                <div id="dept-{{ loop.index }}" style="display:block;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead style="background:#f9fafb;">
+                            <tr>
+                                <th style="padding:12px; text-align:left; border-bottom:1px solid #e5e7eb; font-size:13px;">Item</th>
+                                <th style="padding:12px; text-align:center; border-bottom:1px solid #e5e7eb; font-size:13px; width:100px;">Current Qty</th>
+                                <th style="padding:12px; text-align:center; border-bottom:1px solid #e5e7eb; font-size:13px; width:90px;">Min Level</th>
+                                <th style="padding:12px; text-align:center; border-bottom:1px solid #e5e7eb; font-size:13px; width:100px;">Status</th>
+                                <th style="padding:12px; text-align:center; border-bottom:1px solid #e5e7eb; font-size:13px; width:180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in dept_items %}
+                            <tr style="border-bottom:1px solid #f3f4f6; {% if item.is_low_stock_alert_active %}background:#fef2f2;{% endif %}">
+                                <td style="padding:12px; font-weight:500;">
+                                    {{ item.name }}
+                                    {% if item.is_low_stock_alert_active %}
+                                        <span style="background:#dc2626; color:white; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:8px;">LOW STOCK</span>
+                                    {% endif %}
+                                    {% if item.notes %}
+                                        <div style="font-size:11px; color:#6b7280; margin-top:4px; font-weight:normal;">{{ item.notes }}</div>
+                                    {% endif %}
+                                </td>
+                                <td style="padding:12px; text-align:center; {% if item.quantity <= item.min_stock_level and item.min_stock_level > 0 %}color:#dc2626; font-weight:bold;{% endif %}">
+                                    {{ item.quantity }}
+                                </td>
+                                <td style="padding:12px; text-align:center;">{{ item.min_stock_level }}</td>
+                                <td style="padding:12px; text-align:center;">
+                                    {% if item.is_low_stock_alert_active %}
+                                        <span style="color:#dc2626; font-size:12px; font-weight:500;">Alert Active</span>
+                                    {% elif item.quantity <= item.min_stock_level and item.min_stock_level > 0 %}
+                                        <span style="color:#f59e0b; font-size:12px;">Low</span>
+                                    {% else %}
+                                        <span style="color:#10b981; font-size:12px; font-weight:500;">OK</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding:12px;">
+                                    <div style="display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap;">
+                                        <a href="{{ url_for('inventory.edit_inventory', item_id=item.id) }}" 
+                                           style="display:inline-flex; align-items:center; justify-content:center; padding:6px 12px; font-size:11px; font-weight:500; border-radius:4px; text-decoration:none; background:#f59e0b; color:white; border:none; cursor:pointer; white-space:nowrap;">
+                                            Edit
+                                        </a>
+                                        <a href="{{ url_for('inventory.manage_responsible_persons', item_id=item.id) }}" 
+                                           style="display:inline-flex; align-items:center; justify-content:center; padding:6px 12px; font-size:11px; font-weight:500; border-radius:4px; text-decoration:none; background:#3b82f6; color:white; border:none; cursor:pointer; white-space:nowrap;">
+                                            Alerts
+                                        </a>
+                                        {% if item.is_low_stock_alert_active %}
+                                            <form method="POST" action="{{ url_for('inventory.mark_replenished', item_id=item.id) }}" style="display:inline; margin:0;">
+                                                <button type="submit" 
+                                                        style="display:inline-flex; align-items:center; justify-content:center; padding:6px 12px; font-size:11px; font-weight:500; border-radius:4px; border:none; background:#10b981; color:white; cursor:pointer; white-space:nowrap;"
+                                                        onclick="return confirm('Mark as replenished?')">
+                                                    Replenished
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align:center; padding:40px; color:#9ca3af;">
+                <p>No inventory items found.</p>
+                <p style="font-size:14px;">Add your first item above.</p>
+            </div>
+        {% endif %}
     </div>
-
 </div>
 
+<script>
+function addPersonRow() {
+    const container = document.getElementById('responsiblePersons');
+    const row = document.createElement('div');
+    row.className = 'person-row';
+    row.style = 'display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+    row.innerHTML = `
+        <input type="text" name="responsible_name[]" placeholder="Name" class="form-control">
+        <input type="tel" name="responsible_phone[]" placeholder="Phone (SMS)" class="form-control">
+        <input type="email" name="responsible_email[]" placeholder="Email" class="form-control">
+        <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">Remove</button>
+    `;
+    container.appendChild(row);
+}
+
+function toggleDepartment(deptId) {
+    const content = document.getElementById(deptId);
+    const icon = document.getElementById('icon-' + deptId);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(-90deg)';
+    }
+}
+</script>
+
+<style>
+.btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+.btn-primary { background: #3b82f6; color: white; }
+.btn-secondary { background: #6b7280; color: white; }
+.btn-danger { background: #ef4444; color: white; }
+.form-control { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+.department-group { transition: all 0.2s; }
+.department-group:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+</style>
 {% endblock %}
