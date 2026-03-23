@@ -15,6 +15,11 @@ class Config:
     CLICKATELL_API_KEY = os.getenv("CLICKATELL_API_KEY")
     CLICKATELL_SENDER_ID = os.getenv("CLICKATELL_SENDER_ID")
     
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    S3_BUCKET = os.getenv("S3_BUCKET")
+    S3_REGION = os.getenv("S3_REGION")
+
     # NEW: Email Configuration for info@livingwaters.africa
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")  # or your provider
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))

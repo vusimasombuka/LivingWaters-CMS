@@ -8,8 +8,12 @@ class Sermon(db.Model):
     title = db.Column(db.String(200), nullable=False)
     pastor_name = db.Column(db.String(100), nullable=False)
     sermon_date = db.Column(db.Date, nullable=False)
-    filename = db.Column(db.String(255), nullable=False)
-    file_size = db.Column(db.Integer)  # Size in bytes
+    
+    # S3 storage fields
+    s3_url = db.Column(db.String(500), nullable=False)  # Full S3 URL
+    filename = db.Column(db.String(255), nullable=False)  # For deletion
+    file_size = db.Column(db.Integer)
+    
     branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", name="fk_sermon_branch_id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
