@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Sermon{% endblock %}
+
+{% block content %}
+<h2>Upload New Sermon</h2>
+
+<div style="max-width: 600px; background: white; padding: 30px; border-radius: 8px; margin-top: 20px;">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('sermons.upload_sermon') }}">
+        
+        <div style="margin-bottom: 15px;">
+            <label>Sermon Title *</label>
+            <input type="text" name="title" required class="form-control" placeholder="e.g., Faith in Difficult Times">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Pastor Name *</label>
+            <input type="text" name="pastor_name" required class="form-control" placeholder="e.g., Pastor John Smith">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Sermon Date *</label>
+            <input type="date" name="sermon_date" required class="form-control">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label>Audio File * (Max 50MB)</label>
+            <input type="file" name="file" required class="form-control" accept=".mp3,.wav,.m4a,.aac,.ogg">
+            <small style="color: #7f8c8d;">Allowed formats: MP3, WAV, M4A, AAC, OGG</small>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-success">Upload Sermon</button>
+            <a href="{{ url_for('sermons.list_sermons') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Set today's date as default
+document.querySelector('input[name="sermon_date"]').valueAsDate = new Date();
+</script>
+{% endblock %}

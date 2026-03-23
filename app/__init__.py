@@ -47,6 +47,8 @@ def create_app():
     from app.routes.messaging import messaging_bp
     from app.models.audience_segment import AudienceSegment
     from app.models.mass_message import MassMessage
+    from app.routes.sermons import sermons_bp
+
     # Register blueprints
     
     app.register_blueprint(messaging_bp)
@@ -64,6 +66,7 @@ def create_app():
     app.register_blueprint(sms_logs_bp)
     app.register_blueprint(overview_bp)
     app.register_blueprint(services_bp)
+    app.register_blueprint(sermons_bp)
 
     # Load authentication utilities
     from app import auth_utils

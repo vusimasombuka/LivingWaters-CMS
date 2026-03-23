@@ -711,6 +711,11 @@ input[type="checkbox"] {
     {% else %}
         <a class="disabled-link">Mass Messaging</a>
     {% endif %}
+    {% if current_user.role in ["admin", "super_admin"] %}
+    <a href="{{ url_for('sermons.list_sermons') }}">Sermons/Media</a>
+    {% else %}
+    <a class="disabled-link">Sermons/Media</a>
+    {% endif %}
 
     <!-- LOGOUT -->
     <a href="/logout">Logout</a>

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Sermons{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Sermon Library</h2>
+    <a href="{{ url_for('sermons.upload_sermon') }}" class="btn btn-success">+ Upload New Sermon</a>
+</div>
+
+<!-- Search & Filter Section -->
+<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <form method="GET" action="{{ url_for('sermons.list_sermons') }}">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+            <div>
+                <label>Search Title</label>
+                <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search sermons...">
+            </div>
+            
+            <div>
+                <label>Pastor</label>
+                <select name="pastor" class="form-control">
+                    <option value="">All Pastors</option>
+                    {% for pastor in pastors %}
+                    <option value="{{ pastor }}" {% if pastor_filter == pastor %}selected{% endif %}>
+                        {{ pastor }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label>From Date</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+            </div>
+            
+            <div>
+                <label>To Date</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+            </div>
+            
+            <div>
+                <label>Group By</label>
+                <select name="group_by" class="form-control">
+                    <option value="pastor" {% if group_by == 'pastor' %}selected{% endif %}>Pastor</option>
+                    <option value="date" {% if group_by == 'date' %}selected{% endif %}>Date</option>
+                </select>
+            </div>
+            
+            <div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Sermons List -->
+{% if grouped_sermons %}
+    {% for group_name, sermons in grouped_sermons.items() %}
+    <div style="margin-bottom: 10px;">
+        <!-- Collapsible Header -->
+        <button 
+            onclick="toggleCollapse('group-{{ loop.index }}')" 
+            style="width: 100%; text-align: left; padding: 15px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold; font-size: 16px;">
+                {% if group_by == 'pastor' %}
+                    <i class="bi bi-person"></i> Pastor: {{ group_name }} ({{ sermons|length }} sermons)
+                {% else %}
+                    <i class="bi bi-calendar"></i> {{ group_name }} ({{ sermons|length }} sermons)
+                {% endif %}
+            </span>
+            <span id="icon-{{ loop.index }}" style="font-size: 20px;">▼</span>
+        </button>
+        
+        <!-- Collapsible Content -->
+        <div id="group-{{ loop.index }}" style="display: block; background: white; border: 1px solid #ddd; border-top: none; border-radius: 0 0 6px 6px;">
+            <table class="table" style="margin: 0;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th>Title</th>
+                        <th>Pastor</th>
+                        <th>Date</th>
+                        <th>Size</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sermon in sermons %}
+                    <tr>
+                        <td><strong>{{ sermon.title }}</strong></td>
+                        <td>{{ sermon.pastor_name }}</td>
+                        <td>{{ sermon.sermon_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ sermon.get_file_size_mb() }} MB</td>
+                        <td>
+                            <a href="{{ url_for('sermons.download_sermon', sermon_id=sermon.id) }}" 
+                               class="btn btn-primary btn-sm">Download</a>
+                            <form method="POST" action="{{ url_for('sermons.delete_sermon', sermon_id=sermon.id) }}" 
+                                  style="display: inline;" onsubmit="return confirm('Delete this sermon?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div style="background: white; padding: 40px; text-align: center; border-radius: 8px; color: #7f8c8d;">
+        <h4>No sermons found</h4>
+        <p>Upload your first sermon or adjust your search filters.</p>
+    </div>
+{% endif %}
+
+<script>
+function toggleCollapse(id) {
+    const element = document.getElementById(id);
+    const icon = document.getElementById('icon-' + id.replace('group-', ''));
+    
+    if (element.style.display === 'none') {
+        element.style.display = 'block';
+        icon.textContent = '▼';
+    } else {
+        element.style.display = 'none';
+        icon.textContent = '▶';
+    }
+}
+</script>
+{% endblock %}
