@@ -96,10 +96,12 @@
                                 class="btn btn-warning btn-sm" style="margin-right: 5px;">Edit</a>
                             <a href="{{ url_for('sermons.download_sermon', sermon_id=sermon.id) }}" 
                                 class="btn btn-primary btn-sm" style="margin-right: 5px;">Download</a>
+                            {% if current_user.role == 'super_admin' %}
                             <form method="POST" action="{{ url_for('sermons.delete_sermon', sermon_id=sermon.id) }}" 
                                 style="display: inline;" onsubmit="return confirm('Delete this sermon?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
+                            </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

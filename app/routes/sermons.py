@@ -110,7 +110,7 @@ def download_sermon(sermon_id):
 
 @sermons_bp.route("/delete/<int:sermon_id>", methods=["POST"])
 @login_required
-@role_required("super_admin", "admin")
+@role_required("super_admin")
 def delete_sermon(sermon_id):
     sermon = Sermon.query.get_or_404(sermon_id)
     enforce_branch_access(sermon)
