@@ -119,3 +119,60 @@ def delete_sermon(sermon_id):
     db.session.commit()
     flash("Deleted", "success")
     return redirect(url_for("sermons.list_sermons"))
+
+@sermons_bp.route("/edit/<int:sermon_id>", methods=["GET", "POST"])
+@login_required
+@role_required("super_admin", "admin")
+def edit_sermon(sermon_id):
+    sermon = Sermon.query.get_or_404(sermon_id)
+    enforce_branch_access(sermon)
+    
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        pastor = request.form.get("pastor_name", "").strip()
+        date_str = request.form.get("sermon_date", "").strip()
+        
+        if not all([title, pastor, date_str]):
+            flash("All fields are required", "error")
+            return redirect(request.url)
+        
+        try:
+            sermon.title = title
+            sermon.pastor_name = pastor
+            sermon.sermon_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            
+            # Optional: Handle file replacement if user wants to update the audio
+            if 'file' in request.files and request.files['file'].filename:
+                file = request.files['file']
+                if allowed_file(file.filename):
+                    # Delete old file from S3
+                    delete_file_from_s3(sermon.filename)
+                    
+                    # Upload new file
+                    file.seek(0, 2)
+                    file_size = file.tell()
+                    file.seek(0)
+                    
+                    if file_size > MAX_FILE_SIZE:
+                        flash(f"File too large. Max {MAX_FILE_SIZE//(1024*1024)}MB", "error")
+                        return redirect(request.url)
+                    
+                    filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(file.filename)}"
+                    s3_url = upload_file_to_s3(file, filename)
+                    
+                    sermon.s3_url = s3_url
+                    sermon.filename = filename
+                    sermon.file_size = file_size
+                else:
+                    flash("Invalid file type", "error")
+                    return redirect(request.url)
+            
+            db.session.commit()
+            flash("Sermon updated successfully", "success")
+            return redirect(url_for("sermons.list_sermons"))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Update failed: {str(e)}", "error")
+    
+    return render_template("edit_sermon.html", sermon=sermon, MAX_FILE_SIZE=MAX_FILE_SIZE)

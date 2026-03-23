@@ -92,12 +92,14 @@
                         <td>{{ sermon.sermon_date.strftime('%d %b %Y') }}</td>
                         <td>{{ sermon.get_file_size_mb() }} MB</td>
                         <td>
+                            <a href="{{ url_for('sermons.edit_sermon', sermon_id=sermon.id) }}" 
+                                class="btn btn-warning btn-sm" style="margin-right: 5px;">Edit</a>
                             <a href="{{ url_for('sermons.download_sermon', sermon_id=sermon.id) }}" 
-                               class="btn btn-primary btn-sm">Download</a>
+                                class="btn btn-primary btn-sm" style="margin-right: 5px;">Download</a>
                             <form method="POST" action="{{ url_for('sermons.delete_sermon', sermon_id=sermon.id) }}" 
-                                  style="display: inline;" onsubmit="return confirm('Delete this sermon?');">
+                                style="display: inline;" onsubmit="return confirm('Delete this sermon?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
+                        </form>
                         </td>
                     </tr>
                     {% endfor %}

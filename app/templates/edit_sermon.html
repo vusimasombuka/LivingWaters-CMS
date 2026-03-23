@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Sermon{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Edit Sermon</h2>
+        <a href="{{ url_for('sermons.list_sermons') }}" class="btn btn-secondary">← Back to Sermons</a>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <form method="POST" action="{{ url_for('sermons.edit_sermon', sermon_id=sermon.id) }}" enctype="multipart/form-data">
+            
+            <!-- Current File Info -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0;">Current File</h4>
+                <p style="margin: 5px 0;"><strong>Title:</strong> {{ sermon.title }}</p>
+                <p style="margin: 5px 0;"><strong>Size:</strong> {{ sermon.get_file_size_mb() }} MB</p>
+                <p style="margin: 5px 0;"><strong>Uploaded:</strong> {{ sermon.created_at.strftime('%d %b %Y') }}</p>
+            </div>
+
+            <!-- Title -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sermon Title <span style="color: red;">*</span></label>
+                <input type="text" name="title" value="{{ sermon.title }}" class="form-control" required style="width: 100%; padding: 10px;">
+            </div>
+
+            <!-- Pastor Name -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Speaker/Pastor <span style="color: red;">*</span></label>
+                <input type="text" name="pastor_name" value="{{ sermon.pastor_name }}" class="form-control" required style="width: 100%; padding: 10px;">
+            </div>
+
+            <!-- Date -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sermon Date <span style="color: red;">*</span></label>
+                <input type="date" name="sermon_date" value="{{ sermon.sermon_date.strftime('%Y-%m-%d') }}" class="form-control" required style="width: 100%; padding: 10px;">
+            </div>
+
+            <!-- Optional File Replacement -->
+            <div style="margin-bottom: 20px; padding: 15px; border: 2px dashed #ddd; border-radius: 6px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Replace Audio File (Optional)</label>
+                <input type="file" name="file" accept=".mp3,.wav,.m4a,.aac,.ogg" style="width: 100%; padding: 10px 0;">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Leave empty to keep current file. Allowed: MP3, WAV, M4A, AAC, OGG (Max {{ MAX_FILE_SIZE//(1024*1024) }}MB)
+                </small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px;">Save Changes</button>
+                <a href="{{ url_for('sermons.list_sermons') }}" class="btn btn-secondary" style="flex: 1; padding: 12px; text-align: center;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
