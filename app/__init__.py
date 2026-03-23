@@ -191,8 +191,8 @@ def create_app():
             logger.info("Database tables created (initial setup)")
         
         # Check if setup needed
-        if Branch.query.count() == 0:
-            logger.info("No branches found. Ready for /setup")
+        #if Branch.query.count() == 0:
+         #   logger.info("No branches found. Ready for /setup")
     
     # ================= CLI COMMANDS =================
     @app.cli.command("init-db")
