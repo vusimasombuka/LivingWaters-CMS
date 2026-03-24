@@ -48,7 +48,6 @@ def create_app():
     from app.models.audience_segment import AudienceSegment
     from app.models.mass_message import MassMessage
     from app.routes.sermons import sermons_bp
-    from app.routes.inventory_reports import inventory_reports_bp
 
 
     # Register blueprints
@@ -69,7 +68,6 @@ def create_app():
     app.register_blueprint(overview_bp)
     app.register_blueprint(services_bp)
     app.register_blueprint(sermons_bp)
-    app.register_blueprint(inventory_reports_bp)
 
 
     # Load authentication utilities
