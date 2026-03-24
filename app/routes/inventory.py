@@ -6,7 +6,7 @@ from app.models.inventory import InventoryItem, StockResponsiblePerson, Inventor
 from app.models.lookup import Lookup
 from datetime import datetime, timedelta
 from calendar import monthrange
-from flask_weasyprint import HTML, render_pdf
+
 
 inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
@@ -132,15 +132,15 @@ def render_report_view():
 @login_required
 @role_required("super_admin", "admin", "finance")
 def department_report_pdf():
-    """Print-friendly HTML report - selected items only"""
+    """Print-friendly HTML report"""
     from app.utils.branching import branch_query
     
     department_id = request.args.get("department_id")
     month = int(request.args.get("month", datetime.now().month))
-    year = int(request.args.get("year", datetime.now().month))
+    year = int(request.args.get("year", datetime.now().year))
     selected_item_ids = request.args.getlist("item_ids")
     
-    # Get items - either selected or all in department
+    # Get items
     query = branch_query(InventoryItem)
     
     if selected_item_ids:
@@ -155,7 +155,7 @@ def department_report_pdf():
     
     items = query.order_by(InventoryItem.name).all()
     
-    # Summary stats
+    # Stats
     total_items = len(items)
     low_stock_count = sum(1 for item in items if item.is_low_stock_alert_active)
     total_quantity = sum(item.quantity for item in items)
@@ -163,6 +163,7 @@ def department_report_pdf():
     branch_name = current_user.branch.name if current_user.branch else "All Branches"
     month_name = datetime(year, month, 1).strftime("%B")
     
+    # Just render template - no PDF conversion
     return render_template("inventory_report_print.html",
                           items=items,
                           dept_name=dept_name,
