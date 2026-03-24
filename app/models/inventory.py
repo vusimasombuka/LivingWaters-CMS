@@ -44,3 +44,24 @@ class StockResponsiblePerson(db.Model):
     notify_email = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+class InventoryTransaction(db.Model):
+    __tablename__ = "inventory_transaction"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    inventory_item_id = db.Column(db.Integer, db.ForeignKey("inventory_item.id"), nullable=False, index=True)
+    transaction_type = db.Column(db.String(20), nullable=False)  # 'purchase', 'consumption', 'adjustment', 'initial'
+    quantity_change = db.Column(db.Integer, nullable=False)  # positive or negative
+    previous_quantity = db.Column(db.Integer, nullable=False)
+    new_quantity = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=False)
+    
+    # Relationships
+    item = db.relationship("InventoryItem", backref="transactions")
+    user = db.relationship("User", backref="inventory_transactions")
+    
+    def __repr__(self):
+        return f"<Transaction {self.item.name}: {self.previous_quantity} -> {self.new_quantity}>"

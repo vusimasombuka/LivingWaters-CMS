@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Report</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }
+        .header { text-align: center; border-bottom: 3px solid #2c3e50; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h1 { margin: 0; color: #2c3e50; font-size: 22pt; }
+        .header p { margin: 5px 0; color: #7f8c8d; font-size: 11pt; }
+        .summary { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-around; }
+        .summary-box { text-align: center; }
+        .summary-number { font-size: 28pt; font-weight: bold; color: #2c3e50; }
+        .summary-label { font-size: 10pt; color: #7f8c8d; text-transform: uppercase; }
+        .dept-header { background: #2c3e50; color: white; padding: 12px 15px; font-size: 14pt; font-weight: bold; margin-bottom: 15px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #34495e; color: white; padding: 10px; text-align: left; font-size: 10pt; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .low-stock { background: #ffebee; }
+        .status-low { color: #c62828; font-weight: bold; }
+        .status-ok { color: #2e7d32; }
+        .footer { margin-top: 30px; text-align: center; font-size: 9pt; color: #95a5a6; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Inventory Report</h1>
+        <p><strong>{{ branch_name }}</strong></p>
+        <p>{{ dept_name }} | {{ month_name }} {{ year }}</p>
+        <p>Generated on {{ generated_at.strftime('%Y-%m-%d') }}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-box">
+            <div class="summary-number">{{ total_items }}</div>
+            <div class="summary-label">Items</div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-number">{{ total_quantity }}</div>
+            <div class="summary-label">Total Units</div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-number" style="color: {% if low_stock_count > 0 %}#e74c3c{% else %}#27ae60{% endif %};">{{ low_stock_count }}</div>
+            <div class="summary-label">Low Stock</div>
+        </div>
+    </div>
+
+    <div class="dept-header">
+        {{ dept_name }}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th style="text-align:center; width:100px;">Quantity</th>
+                <th style="text-align:center; width:100px;">Min Level</th>
+                <th style="text-align:center; width:100px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr {% if item.is_low_stock_alert_active %}class="low-stock"{% endif %}>
+                <td>
+                    <strong>{{ item.name }}</strong>
+                    {% if item.notes %}
+                    <br><small style="color:#666;">{{ item.notes }}</small>
+                    {% endif %}
+                </td>
+                <td style="text-align:center; font-weight:bold;">{{ item.quantity }}</td>
+                <td style="text-align:center;">{{ item.min_stock_level }}</td>
+                <td style="text-align:center;">
+                    {% if item.is_low_stock_alert_active %}
+                    <span class="status-low">LOW STOCK</span>
+                    {% else %}
+                    <span class="status-ok">OK</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Living Waters Bible Church - Inventory Report | Confidential
+    </div>
+</body>
+</html>

@@ -3,151 +3,300 @@
 
 <style>
 .category-link {
-    display:block;
-    margin-bottom:8px;
-    text-decoration:none;
-    padding:8px 10px;
-    border-radius:6px;
-    color:#333;
-    font-size:14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #333;
+    font-size: 14px;
 }
 
 .category-link:hover {
-    background:#e9edf3;
+    background: #e9edf3;
+}
+
+.category-children {
+    margin-left: 15px;
+    border-left: 2px solid #ddd;
+    padding-left: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.category-children.collapsed {
+    display: none;
+}
+
+.subcategory-link {
+    font-size: 13px;
+    color: #555;
+}
+
+.category-form {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f5f7fa;
+    border-radius: 6px;
 }
 
 .doc-list {
-    width:100%;
-    border-collapse:collapse;
-    background:white;
-    border-radius:8px;
-    overflow:hidden;
-    border:1px solid #e6eaf0;
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e6eaf0;
 }
 
 .doc-list thead {
-    background:#f5f7fa;
+    background: #f5f7fa;
 }
 
 .doc-list th {
-    padding:8px 10px;
-    font-size:13px;
-    font-weight:600;
-    color:#555;
-    text-align:left;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    text-align: left;
 }
 
 .doc-list td {
-    padding:6px 10px;
-    font-size:14px;
-    border-top:1px solid #f0f2f5;
-    vertical-align:middle;
+    padding: 6px 10px;
+    font-size: 14px;
+    border-top: 1px solid #f0f2f5;
+    vertical-align: middle;
 }
 
 .doc-list tr:hover {
-    background:#fafbfd;
+    background: #fafbfd;
 }
 
 .actions-cell {
-    text-align:right;
-    width:160px;
+    text-align: right;
+    width: 160px;
 }
 
 .doc-actions {
-    display:inline-flex;
-    gap:6px;
-    align-items:center;
-    justify-content:flex-end;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
 }
 
-.btn-download,
-.btn-delete {
-    height:28px;
-    padding:0 10px;
-    border-radius:4px;
-    font-size:11px;
-    font-weight:600;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    line-height:1;
+.btn-download, .btn-delete, .btn-preview {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    cursor: pointer;
 }
 
 .btn-download {
-    background:#27ae60;
-    color:white;
-    text-decoration:none;
+    background: #27ae60;
+    color: white;
+    text-decoration: none;
 }
 
 .btn-delete {
-    background:#e74c3c;
-    color:white;
-    border:none;
+    background: #e74c3c;
+    color: white;
+    border: none;
+}
+
+.btn-preview {
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+}
+
+.badge-count {
+    background: #e0e0e0;
+    color: #555;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.parent-category {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Toggle button styles */
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    margin-right: 4px;
+    font-size: 10px;
+    color: #666;
+    transition: transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.toggle-btn:hover {
+    background: #d0d0d0;
+    border-radius: 3px;
+}
+
+.toggle-btn.collapsed {
+    transform: rotate(-90deg);
+}
+
+.category-row {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.category-name {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 </style>
 
-
-<div style="display:flex; gap:30px;">
+<div style="display: flex; gap: 30px;">
 
     <!-- LEFT: Categories -->
-    <div style="width:250px;">
+    <div style="width: 280px;">
         <h4>Categories</h4>
 
-        <a href="{{ url_for('documents.documents_list') }}" class="category-link">
-            All Documents
+        <a href="{{ url_for('documents.documents_list') }}" class="category-link {% if not selected_category %}active{% endif %}" 
+           style="background: {% if not selected_category %}#e3f2fd{% else %}transparent{% endif %};">
+            <span>📁 All Documents</span>
         </a>
 
-        {% for category in categories %}
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <a href="{{ url_for('documents.documents_list', category=category.id) }}"
-               class="category-link"
-               style="flex:1;">
-                {{ category.name }}
-            </a>
+        {% for category in root_categories %}
+        <div class="category-tree">
+            <!-- Parent Category -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="category-row" style="flex: 1;">
+                    {% if category.children %}
+                    <button type="button" class="toggle-btn" onclick="toggleCategory({{ category.id }})" id="toggle-{{ category.id }}">
+                        ▼
+                    </button>
+                    {% else %}
+                    <span style="width: 20px; display: inline-block;"></span>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('documents.documents_list', category=category.id) }}"
+                       class="category-link parent-category"
+                       style="flex: 1; background: {% if selected_category == category.id %}#e3f2fd{% else %}transparent{% endif %};">
+                        <span class="category-name">
+                            <span>📁 {{ category.name }}</span>
+                            {% if category.children or category.documents %}
+                            <span class="badge-count">{{ category.documents|length + category.children|map(attribute='documents')|map('length')|sum }}</span>
+                            {% endif %}
+                        </span>
+                    </a>
+                </div>
+                
+                <form method="POST"
+                      action="{{ url_for('documents.delete_category', category_id=category.id) }}"
+                      style="display: inline;"
+                      onsubmit="return confirm('Delete this category? All sub-categories and documents must be removed first.')">
+                    <button type="submit" style="background: #e5533d; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px;">×</button>
+                </form>
+            </div>
 
-            <form method="POST"
-      action="{{ url_for('documents.delete_category', category_id=category.id) }}"
-      style="display:inline;"
-      onsubmit="return confirm('Delete this category and all its documents?')">
-    <button type="submit"
-            style="background:#e5533d; color:white; border:none; padding:4px 8px; border-radius:4px;">
-        ×
-    </button>
-</form>
-
+            <!-- Children (collapsible) -->
+            {% if category.children %}
+            <div class="category-children" id="children-{{ category.id }}">
+                {% for child in category.children %}
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <a href="{{ url_for('documents.documents_list', category=child.id) }}"
+                       class="category-link subcategory-link"
+                       style="flex: 1; background: {% if selected_category == child.id %}#e3f2fd{% else %}transparent{% endif %}; padding-left: 30px;">
+                        <span>📄 {{ child.name }}</span>
+                        {% if child.documents %}
+                        <span class="badge-count">{{ child.documents|length }}</span>
+                        {% endif %}
+                    </a>
+                    
+                    <form method="POST"
+                          action="{{ url_for('documents.delete_category', category_id=child.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Delete this sub-category?')">
+                        <button type="submit" style="background: #e5533d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px;">×</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
 
-        <hr>
+        <hr style="margin: 20px 0;">
 
-        <form method="POST" action="{{ url_for('documents.add_category') }}">
-    <input type="text" name="name" placeholder="New Category" required>
-    <button type="submit" class="btn-primary">+ Add</button>
-</form>
-
+        <!-- Add Category Form -->
+        <div class="category-form">
+            <h5 style="margin: 0 0 10px 0; font-size: 14px;">Add Category</h5>
+            <form method="POST" action="{{ url_for('documents.add_category') }}">
+                <input type="text" name="name" placeholder="Category Name" required 
+                       style="width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                
+                <select name="parent_id" 
+                        style="width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- No Parent (Root Category) --</option>
+                    {% for cat in root_categories %}
+                    <option value="{{ cat.id }}">Under: {{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 6px; font-size: 12px;">+ Add Category</button>
+            </form>
+        </div>
     </div>
 
 
     <!-- RIGHT: Documents -->
-    <div style="flex:1;">
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Documents</h2>
+    <div style="flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">
+                {% if selected_category %}
+                    {% for cat in all_categories %}
+                        {% if cat.id == selected_category %}
+                            {% if cat.parent %}{{ cat.parent.name }} → {% endif %}{{ cat.name }}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    All Documents
+                {% endif %}
+            </h2>
 
             <a href="{{ url_for('documents.upload_document') }}"
-               style="background:#2d89ef; color:white; padding:8px 14px; border-radius:6px; text-decoration:none;">
-                + Upload
+               style="background: #2d89ef; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none;">
+                + Upload Document
             </a>
         </div>
 
         <!-- SEARCH -->
-        <form method="GET" style="margin-bottom:20px;">
-            <input type="text"
-                   name="q"
-                   value="{{ search }}"
-                   placeholder="Search documents..."
-                   style="width:70%; padding:8px;">
-            <button type="submit">Search</button>
+        <form method="GET" style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search documents..." 
+                   style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            {% if selected_category %}
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+            <button type="submit" style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+            {% if search %}
+            <a href="{{ url_for('documents.documents_list', category=selected_category if selected_category else None) }}" 
+               style="padding: 8px 16px; background: #999; color: white; text-decoration: none; border-radius: 4px;">Clear</a>
+            {% endif %}
         </form>
 
         {% if documents %}
@@ -165,24 +314,27 @@
                 {% for doc in documents %}
                 <tr>
                     <td>📄 {{ doc.name }}</td>
-                    <td>{{ doc.category.name if doc.category else '' }}</td>
+                    <td>
+                        {% if doc.category %}
+                            {% if doc.category.parent %}
+                                <small style="color: #666;">{{ doc.category.parent.name }} →</small><br>
+                            {% endif %}
+                            {{ doc.category.name }}
+                        {% endif %}
+                    </td>
                     <td>{{ doc.uploaded_by }}</td>
-                    <td>{{ doc.created_at.strftime("%Y-%m-%d") }}</td>
+                    <td>{{ doc.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
                     <td class="actions-cell">
                         <div class="doc-actions">
-                            <a href="{{ url_for('documents.download_document', doc_id=doc.id) }}"
-                               class="btn-download">
+                            <a href="{{ url_for('documents.preview_document', filename=doc.filename) }}" 
+                               target="_blank" class="btn-preview">View</a>
+                            <a href="{{ url_for('documents.download_document', doc_id=doc.id) }}" class="btn-download">
                                 Download
                             </a>
-
                             <form method="POST"
-      action="{{ url_for('documents.delete_document', doc_id=doc.id) }}"
-      onsubmit="return confirm('Are you sure you want to delete this document?')">
-    <button type="submit" class="btn-sm btn-delete">
-        Delete
-    </button>
-</form>
-
+                                  action="{{ url_for('documents.delete_document', doc_id=doc.id) }}"
+                                  onsubmit="return confirm('Delete this document?')">
+                                <button type="submit" class="btn-delete">Delete</button>
                             </form>
                         </div>
                     </td>
@@ -191,51 +343,53 @@
             </tbody>
         </table>
         {% else %}
-            <p style="margin-top:20px; color:#777;">No documents found.</p>
+        <div style="text-align: center; padding: 40px; background: #f5f7fa; border-radius: 8px; color: #666;">
+            <p style="font-size: 16px; margin-bottom: 10px;">No documents found in this category.</p>
+            <a href="{{ url_for('documents.upload_document') }}" style="color: #2d89ef; text-decoration: none;">Upload your first document</a>
+        </div>
         {% endif %}
 
     </div>
 </div>
-<style>
-.documents-table th,
-.documents-table td {
-    padding: 6px 12px;
-    vertical-align: middle;
+
+<script>
+function toggleCategory(categoryId) {
+    const childrenDiv = document.getElementById('children-' + categoryId);
+    const toggleBtn = document.getElementById('toggle-' + categoryId);
+    
+    if (childrenDiv.classList.contains('collapsed')) {
+        childrenDiv.classList.remove('collapsed');
+        toggleBtn.innerHTML = '▼';
+        toggleBtn.classList.remove('collapsed');
+    } else {
+        childrenDiv.classList.add('collapsed');
+        toggleBtn.innerHTML = '▶';
+        toggleBtn.classList.add('collapsed');
+    }
 }
 
-.documents-table th {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.documents-table td {
-    font-size: 14px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-.btn-sm {
-    padding: 5px 10px;
-    font-size: 12px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-download {
-    background-color: #2ea44f;
-    color: white;
-}
-
-.btn-delete {
-    background-color: #e5533d;
-    color: white;
-}
-</style>
+// Auto-expand if a child is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedCategory = {{ selected_category|default('null') }};
+    if (selectedCategory) {
+        // Find and expand parent of selected category
+        {% for cat in root_categories %}
+            {% for child in cat.children %}
+                if (selectedCategory === {{ child.id }}) {
+                    const parentChildren = document.getElementById('children-{{ cat.id }}');
+                    const parentToggle = document.getElementById('toggle-{{ cat.id }}');
+                    if (parentChildren && parentChildren.classList.contains('collapsed')) {
+                        parentChildren.classList.remove('collapsed');
+                        if (parentToggle) {
+                            parentToggle.innerHTML = '▼';
+                            parentToggle.classList.remove('collapsed');
+                        }
+                    }
+                }
+            {% endfor %}
+        {% endfor %}
+    }
+});
+</script>
 
 {% endblock %}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Report - {{ dept_name }}</title>
+    <style>
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
+        body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.4; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; border-bottom: 3px solid #2c3e50; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h1 { margin: 0; color: #2c3e50; font-size: 24pt; }
+        .header p { margin: 5px 0; color: #7f8c8d; font-size: 11pt; }
+        .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-around; text-align: center; }
+        .summary-box { padding: 10px; }
+        .summary-number { font-size: 32pt; font-weight: bold; color: #2c3e50; }
+        .summary-label { font-size: 10pt; color: #7f8c8d; text-transform: uppercase; margin-top: 5px; }
+        .dept-header { background: #2c3e50; color: white; padding: 15px; font-size: 14pt; font-weight: bold; margin-bottom: 15px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #34495e; color: white; padding: 12px; text-align: left; font-size: 11pt; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .low-stock { background: #ffebee !important; }
+        .status-low { color: #c62828; font-weight: bold; background: #fee; padding: 4px 8px; border-radius: 4px; }
+        .status-ok { color: #2e7d32; background: #efe; padding: 4px 8px; border-radius: 4px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 9pt; color: #95a5a6; border-top: 1px solid #eee; padding-top: 15px; }
+        .print-btn { 
+            position: fixed; top: 20px; right: 20px; 
+            background: #2c3e50; color: white; padding: 12px 24px; 
+            border: none; border-radius: 6px; cursor: pointer; font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .print-btn:hover { background: #1a252f; }
+        .instructions { 
+            background: #e3f2fd; border: 1px solid #2196f3; 
+            padding: 15px; border-radius: 6px; margin-bottom: 20px; 
+            font-size: 11pt; color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button -->
+    <button onclick="window.print()" class="print-btn no-print">🖨️ Print / Save as PDF</button>
+    
+    <!-- Instructions -->
+    <div class="instructions no-print">
+        <strong>💡 How to save as PDF:</strong> Click the "Print" button above → Select "Save as PDF" or "Microsoft Print to PDF" as your printer → Click Save.
+    </div>
+
+    <div class="header">
+        <h1>Inventory Report</h1>
+        <p><strong>{{ branch_name }}</strong></p>
+        <p>{{ dept_name }} | {{ month_name }} {{ year }}</p>
+        <p>Generated on {{ generated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-box">
+            <div class="summary-number">{{ total_items }}</div>
+            <div class="summary-label">Items</div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-number">{{ total_quantity }}</div>
+            <div class="summary-label">Total Units</div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-number" style="color: {% if low_stock_count > 0 %}#e74c3c{% else %}#27ae60{% endif %};">{{ low_stock_count }}</div>
+            <div class="summary-label">Low Stock Alerts</div>
+        </div>
+    </div>
+
+    <div class="dept-header">
+        {{ dept_name }}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th style="text-align:center; width:120px;">Quantity</th>
+                <th style="text-align:center; width:120px;">Min Level</th>
+                <th style="text-align:center; width:120px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr {% if item.is_low_stock_alert_active %}class="low-stock"{% endif %}>
+                <td>
+                    <strong>{{ item.name }}</strong>
+                    {% if item.notes %}
+                    <br><small style="color:#666;">{{ item.notes }}</small>
+                    {% endif %}
+                </td>
+                <td style="text-align:center; font-weight:bold; {% if item.is_low_stock_alert_active %}color:#c62828{% endif %}">{{ item.quantity }}</td>
+                <td style="text-align:center;">{{ item.min_stock_level }}</td>
+                <td style="text-align:center;">
+                    {% if item.is_low_stock_alert_active %}
+                    <span class="status-low">LOW STOCK</span>
+                    {% else %}
+                    <span class="status-ok">OK</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Living Waters Bible Church - Inventory Report | Confidential Document
+    </div>
+</body>
+</html>

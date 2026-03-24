@@ -12,7 +12,12 @@
     <input type="date" name="event_date" required>
 
     <label>Department</label>
-    <input type="text" name="department" placeholder="e.g., Youth, Worship, Seniors">
+<select name="department" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    <option value="">-- Select Department --</option>
+    {% for dept in departments %}
+        <option value="{{ dept.value }}">{{ dept.value }}</option>
+    {% endfor %}
+</select>
 
     <label>Description</label>
     <textarea name="description" rows="3" placeholder="Brief description..."></textarea>

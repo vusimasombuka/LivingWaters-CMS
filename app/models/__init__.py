@@ -9,7 +9,7 @@ from app.models.sms_template import SMSTemplate
 from app.models.sms_log import SMSLog
 from app.models.service import Service
 from app.models.event import Event
-from .inventory import InventoryItem
+from .inventory import InventoryItem, StockResponsiblePerson, InventoryTransaction
 from .lookup import Lookup
 from app.models.branch import Branch
 from .document_category import DocumentCategory

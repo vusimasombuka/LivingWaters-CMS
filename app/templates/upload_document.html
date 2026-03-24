@@ -1,27 +1,93 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div style="max-width:600px; margin:auto;">
+<div style="max-width: 600px; margin: 0 auto;">
     <h2>Upload Document</h2>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+        
+        <!-- Document Name -->
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Document Name</label>
+            <input type="text" name="name" required 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
 
-        <label>Document Name</label>
-        <input type="text" name="name" required class="input">
+        <!-- Parent Category Selection -->
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Department (Parent Category)</label>
+            <select id="parent_category" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- Select Department --</option>
+                {% for cat in parent_categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-        <label style="margin-top:15px;">Select Category</label>
-        <select name="category_id" required class="input">
-            <option value="">-- Select Category --</option>
-            {% for category in categories %}
-                <option value="{{ category.id }}">{{ category.name }}</option>
-            {% endfor %}
-        </select>
+        <!-- Sub Category Selection -->
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Specific Category (Sub-category)</label>
+            <select id="subcategory_select" name="category_id" required 
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- First select a Department --</option>
+            </select>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                If you don't see the right sub-category, 
+                <a href="{{ url_for('documents.documents_list') }}" target="_blank">create it first</a>
+            </small>
+        </div>
 
-        <label style="margin-top:15px;">Select File</label>
-        <input type="file" name="file" required>
+        <!-- File Upload -->
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">File</label>
+            <input type="file" name="file" required 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
 
-        <button class="btn-primary" style="margin-top:20px;">Upload</button>
+        <!-- Buttons -->
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" 
+                    style="flex: 1; padding: 10px; background: #2d89ef; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                Upload Document
+            </button>
+            <a href="{{ url_for('documents.documents_list') }}" 
+               style="padding: 10px 20px; background: #666; color: white; text-decoration: none; border-radius: 4px;">
+                Cancel
+            </a>
+        </div>
     </form>
 </div>
+
+<script>
+// Cascading dropdown logic
+document.getElementById('parent_category').addEventListener('change', function() {
+    const parentId = this.value;
+    const subSelect = document.getElementById('subcategory_select');
+    
+    if (!parentId) {
+        subSelect.innerHTML = '<option value="">-- First select a Department --</option>';
+        return;
+    }
+    
+    // Fetch subcategories via AJAX
+    fetch(`/documents/api/subcategories/${parentId}`)
+        .then(response => response.json())
+        .then(data => {
+            subSelect.innerHTML = '<option value="">-- Select Sub-category --</option>';
+            
+            if (data.length === 0) {
+                subSelect.innerHTML += '<option value="" disabled>No sub-categories found. Create one first.</option>';
+            } else {
+                data.forEach(cat => {
+                    subSelect.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subcategories:', error);
+            subSelect.innerHTML = '<option value="">Error loading subcategories</option>';
+        });
+});
+</script>
 
 {% endblock %}
