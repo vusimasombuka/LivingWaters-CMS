@@ -234,19 +234,13 @@
                     <button type="submit" class="btn btn-primary" style="flex:1;">
                         📊 Generate Report
                     </button>
-                    {% if report_items and request.args.get('department_id') %}
-<a href="{{ url_for('inventory.department_report_pdf', department_id=selected_dept, month=selected_month, year=selected_year, item_ids=selected_item_ids) }}" 
-   target="_blank"
-   class="btn btn-danger" style="flex:1; text-decoration:none; color:white; text-align:center;">
-    📄 Export PDF / Print
-</a>
-{% else %}
-<button type="button" disabled 
-        style="flex:1; background:#ccc; color:#666; padding:10px 20px; border:none; border-radius:6px; cursor:not-allowed; text-align:center;"
-        title="Generate report first">
-    📄 Export PDF / Print
-</button>
-{% endif %}
+                    {% if report_items %}
+                    <a href="{{ url_for('inventory.department_report_pdf', department_id=selected_dept, month=selected_month, year=selected_year, item_ids=selected_item_ids) }}" 
+                       target="_blank"
+                       class="btn btn-danger" style="flex:1; text-decoration:none; color:white; text-align:center;">
+                        📄 Export PDF / Print
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('inventory.inventory_home', view='list') }}" 
                        class="btn btn-secondary" style="text-decoration:none; color:white; text-align:center;">
                         ← Back to Inventory
