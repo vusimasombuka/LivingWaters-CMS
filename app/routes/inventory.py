@@ -71,40 +71,53 @@ def render_report_view():
     """Simple department report - with item selection"""
     from app.utils.branching import branch_query
     
-    # Get filter parameters
+    # Get filter parameters - safely convert to int
     department_id = request.args.get("department_id")
     month = request.args.get("month", datetime.now().month)
     year = request.args.get("year", datetime.now().year)
-    selected_item_ids = request.args.getlist("item_ids")  # Get selected items
+    selected_item_ids = request.args.getlist("item_ids")
+    
+    # Convert to int safely
+    try:
+        department_id = int(department_id) if department_id else None
+    except (ValueError, TypeError):
+        department_id = None
+        
+    try:
+        month = int(month)
+        year = int(year)
+    except (ValueError, TypeError):
+        month = datetime.now().month
+        year = datetime.now().year
     
     # Get departments for dropdown
     all_departments = Lookup.query.filter_by(category="department", is_active=True).all()
     
-    # If department selected, get its items for the checkbox list
+    # If department selected, get its items
     department_items = []
     if department_id:
         dept_items_query = branch_query(InventoryItem).filter(
-            InventoryItem.department_id == department_id
+            InventoryItem.department_id == department_id  # Now it's an int
         ).order_by(InventoryItem.name).all()
         department_items = dept_items_query
         
-        selected_dept = Lookup.query.get(int(department_id))
+        selected_dept = Lookup.query.get(department_id)  # Already int
         dept_name = selected_dept.value if selected_dept else "All Departments"
     else:
         dept_name = "All Departments"
     
     # Filter items for report
     if selected_item_ids:
-        # Show only selected items
-        query = branch_query(InventoryItem).filter(
-            InventoryItem.id.in_([int(id) for id in selected_item_ids])
-        )
-        report_items = query.order_by(InventoryItem.name).all()
+        # Convert item IDs to integers safely
+        try:
+            item_ids = [int(id) for id in selected_item_ids if id.isdigit()]
+            query = branch_query(InventoryItem).filter(InventoryItem.id.in_(item_ids))
+            report_items = query.order_by(InventoryItem.name).all()
+        except:
+            report_items = []
     elif department_id:
-        # Show all items in department if none selected
         report_items = department_items
     else:
-        # Show all items if no department selected
         report_items = branch_query(InventoryItem).order_by(InventoryItem.name).all()
     
     # Calculate summary stats
@@ -114,13 +127,13 @@ def render_report_view():
     
     return render_template("inventory.html",
                          departments=all_departments,
-                         department_items=department_items,  # Items for checkbox list
+                         department_items=department_items,
                          items_by_department={},
                          view="report",
                          report_items=report_items,
                          dept_name=dept_name,
-                         selected_month=int(month),
-                         selected_year=int(year),
+                         selected_month=month,
+                         selected_year=year,
                          selected_dept=department_id,
                          selected_item_ids=selected_item_ids,
                          total_items=total_items,
