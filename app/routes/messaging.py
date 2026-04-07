@@ -399,6 +399,10 @@ def report(id):
         page = request.args.get("page", 1, type=int)
         status_filter = request.args.get("status")
         
+        from app.models.member import Member
+        from app.models.visitor import Visitor
+        from sqlalchemy import desc
+        
         query = SMSLog.query.filter_by(mass_message_id=id)
         
         if status_filter:
@@ -408,11 +412,20 @@ def report(id):
             page=page, per_page=50, error_out=False
         )
         
+        # 🎯 GET NAMES FOR ALL RECIPIENTS
+        member_ids = [log.related_id for log in logs.items if log.related_table == 'member' and log.related_id]
+        visitor_ids = [log.related_id for log in logs.items if log.related_table == 'visitor' and log.related_id]
+        
+        members = {m.id: m for m in Member.query.filter(Member.id.in_(member_ids)).all()} if member_ids else {}
+        visitors = {v.id: v for v in Visitor.query.filter(Visitor.id.in_(visitor_ids)).all()} if visitor_ids else {}
+        
         return render_template(
             "messaging/report.html",
             message=msg,
             logs=logs,
-            status_filter=status_filter
+            status_filter=status_filter,
+            members=members,
+            visitors=visitors
         )
         
     except Exception as e:

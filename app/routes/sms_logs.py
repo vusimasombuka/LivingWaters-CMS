@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 from app.decorators import role_required
-from app.models.sms_log import SMSLog
+from app.models.sms_log import SMSLog  # Import the model, don't define it here
 from app.extensions import db
 from app.utils.branching import branch_query, enforce_branch_access
 

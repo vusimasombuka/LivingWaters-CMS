@@ -119,12 +119,14 @@
                         {% for log in logs.items %}
                         <tr>
                             <td>
-                                {% if log.member %}
-                                    {{ log.member.full_name }}
-                                {% else %}
-                                    <span class="text-muted">Unknown</span>
-                                {% endif %}
-                            </td>
+    {% if log.related_table == 'member' and log.related_id in members %}
+        {{ members[log.related_id].first_name }} {{ members[log.related_id].last_name }}
+    {% elif log.related_table == 'visitor' and log.related_id in visitors %}
+        {{ visitors[log.related_id].first_name }} {{ visitors[log.related_id].last_name }}
+    {% else %}
+        <span class="text-muted">Unknown ({{ log.phone }})</span>
+    {% endif %}
+</td>
                             <td><code>{{ log.phone }}</code></td>
                             <td>
                                 <span class="badge bg-{% if log.status == 'sent' %}success{% elif log.status == 'failed' %}danger{% else %}warning{% endif %}">

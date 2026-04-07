@@ -25,10 +25,16 @@ def list_members():
 
     # SEARCH: Filter by name or phone
     if search:
+        # Normalize phone search if it starts with 0
+        normalized_search = search
+        if search.startswith('0'):
+            normalized_search = normalize_sa_phone(search)
+        
         search_filter = or_(
             Member.first_name.ilike(f"%{search}%"),
             Member.last_name.ilike(f"%{search}%"),
-            Member.phone.ilike(f"%{search}%")
+            Member.phone.ilike(f"%{search}%"),           # Original search
+            Member.phone.ilike(f"%{normalized_search}%") # Normalized version
         )
         query = query.filter(search_filter)
 

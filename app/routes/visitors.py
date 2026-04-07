@@ -7,6 +7,7 @@ from app.models.check_in import CheckIn
 from app.models.giving import Giving
 from app.models.member import Member
 from app.utils.branching import branch_query, enforce_branch_access
+from app.utils import normalize_sa_phone
 
 visitors_bp = Blueprint("visitors", __name__, url_prefix="/visitors")
 
@@ -27,10 +28,16 @@ def visitors_list():
 
     # SEARCH: Filter by name or phone
     if search:
+        # Normalize phone search if it starts with 0
+        normalized_search = search
+        if search.startswith('0'):
+            normalized_search = normalize_sa_phone(search)
+            
         search_filter = or_(
             Visitor.first_name.ilike(f"%{search}%"),
             Visitor.last_name.ilike(f"%{search}%"),
-            Visitor.phone.ilike(f"%{search}%")
+            Visitor.phone.ilike(f"%{search}%"),           # Original search
+            Visitor.phone.ilike(f"%{normalized_search}%") # Normalized version
         )
         base_query = base_query.filter(search_filter)
 

@@ -50,6 +50,8 @@ def process_mass_messages():
     """
     from app.models.mass_message import MassMessage
     from app.services.audience_builder import AudienceBuilder
+    from app.models.member import Member
+    from app.models.visitor import Visitor
     
     now = datetime.utcnow()
     
@@ -73,7 +75,7 @@ def process_mass_messages():
                 logger.info(f"  Using saved segment {msg.audience_segment_id} - forced audience_type: 'members'")
             else:
                 filters = msg.ad_hoc_filters or {}
-                # ✅ FIXED: Use audience_type from message object (not filters)
+                # Use audience_type from message object (not filters)
                 audience_type = msg.audience_type or 'members'
                 logger.info(f"  Using ad-hoc filters - stored audience_type: '{msg.audience_type}', resolved to: '{audience_type}'")
                 logger.debug(f"  Filter criteria: {filters}")
@@ -86,7 +88,7 @@ def process_mass_messages():
             else:
                 logger.info(f"  Using target branch_id: {branch_id}")
             
-            # 🎯 NEW: Get all recipients with audience_type
+            # Get all recipients with audience_type
             logger.info(f"  Fetching recipients with audience_type='{audience_type}'")
             recipients = AudienceBuilder.get_recipients(
                 filters, 
@@ -123,13 +125,26 @@ def process_mass_messages():
                     
                     personalized = AudienceBuilder.personalize_message(msg.content, person)
                     
+                    # Determine if person is Member or Visitor and set related fields
+                    if isinstance(person, Member):
+                        related_table = "member"
+                        related_id = person.id
+                    elif isinstance(person, Visitor):
+                        related_table = "visitor"
+                        related_id = person.id
+                    else:
+                        related_table = None
+                        related_id = None
+                    
                     logs.append(SMSLog(
                         phone=person.phone,
                         message=personalized,
                         message_type="mass_message",
                         mass_message_id=msg.id,
                         status="pending",
-                        branch_id=person.branch_id
+                        branch_id=person.branch_id,
+                        related_table=related_table,
+                        related_id=related_id
                     ))
                 
                 if logs:
@@ -141,14 +156,13 @@ def process_mass_messages():
             msg.status = "sent"
             msg.sent_at = datetime.utcnow()
             db.session.commit()
-            logger.info(f"✅ Message {msg.id} completed successfully. Total SMS created: {total_created}")
+            logger.info(f"Message {msg.id} completed successfully. Total SMS created: {total_created}")
             
         except Exception as e:
             msg.status = "draft"  # Reset to draft on error
             db.session.commit()
-            logger.error(f"❌ Error processing mass message {msg.id}: {str(e)}", exc_info=True)
+            logger.error(f"Error processing mass message {msg.id}: {str(e)}", exc_info=True)
 
-# Update your existing send_ready_sms to update MassMessage stats
 def update_mass_message_stats():
     """Update sent/failed counts on MassMessage based on SMSLog"""
     from app.models.mass_message import MassMessage
@@ -174,5 +188,5 @@ def update_mass_message_stats():
 
 def run_messaging_jobs():
     process_mass_messages()  # Create pending SMS logs
-    send_ready_sms()         # Your existing function
+    send_ready_sms()         # Send the actual SMS
     update_mass_message_stats()  # Update counts
